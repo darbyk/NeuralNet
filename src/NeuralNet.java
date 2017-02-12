@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-//Another comment?
 public class NeuralNet {
 	//LBFGS variables
 	int iflag[] = {0};
@@ -39,7 +38,7 @@ public class NeuralNet {
 //		Double[][] inputData = {{0.1,0.1},{0.45,0.1},{0.1,0.2},{0.2,0.2},{0.35,0.2},{0.75,0.2},{0.3,0.3},{0.55,0.3},{0.7,0.3},{0.85,0.3},{0.05,0.4},{0.35,0.4},{0.45,0.4},{0.7,0.4},{0.9,0.4},{0.25,0.5},{0.6,0.5},{0.15,0.6},{0.35,0.6},{0.85,0.6},{0.05,0.7},{0.15,0.6},{0.2,0.8},{0.25,0.7},{0.45,0.8},{0.55,0.7},{0.55,0.9},{0.7,0.7},{0.7,0.9},{0.85,0.9},{0.9,0.7}};
 //		Double[][] outputData = {{0.},{0.},{0.},{0.},{0.},{0.},{1.},{0.},{1.},{0.},{0.},{1.},{1.},{1.},{0.},{1.},{1.},{0.},{1.},{0.},{0.},{0.},{0.},{1.},{0.},{1.},{0.},{1.},{0.},{0.},{0.}};
 		
-		ImageHelper helper = new ImageHelper("C:\\Users\\Darby\\OneDrive\\Documents\\");
+		ImageHelper helper = new ImageHelper("data\\");
 		
 		Double[][] inputData = {
 				helper.extractBytes("eight1.png"),
@@ -84,7 +83,6 @@ public class NeuralNet {
 				{0.}
 		};
 		
-//		Double[][] testData = {{11/20.,3/10.}};
 		Double[][] testData = {
 				helper.extractBytes("eight4.png"),
 				helper.extractBytes("four1.png")
@@ -140,6 +138,7 @@ public class NeuralNet {
 		iflag[0]=0;
 		icall=0;
 	}
+
 	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData)
 	{
 		//Begin initialization of network
@@ -259,26 +258,6 @@ public class NeuralNet {
 		}
 		
 		
-		//Initialize Weights
-//		for(int i = 0; i < networkDescription.length - 1; i++)
-//		{
-//			Double[][] tempWeights = new Double[networkDescription[i]][networkDescription[i+1]];
-//			for(int x = 0; x < networkDescription[i]; x++)
-//			{
-//				for(int y = 0; y < networkDescription[i+1]; y++)
-//				{
-//					double randomNum = Math.random()*2-1;
-//					int curWeightInt = ((int)(randomNum * 1000));
-//					double curWeight = curWeightInt/1000.0;
-//					tempWeights[x][y] = curWeight;
-//				}
-//			}
-//			weights.add(tempWeights);
-//			printMatrix(tempWeights);
-//		}
-		
-		
-		
 		//Initialize Gradients
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
@@ -308,8 +287,6 @@ public class NeuralNet {
 		diag = new double [ numberOfVariables ];
 	}
 	
-	
-	
 	public void calculateForwardProp()
 	{
 		Double[][] a = inputData;
@@ -323,6 +300,7 @@ public class NeuralNet {
 //		printMatrix(a);
 		yHat = a;
 	}
+
 	public double calculateCostFunction(Double[][] Y, Double[][] yHat)
 	{
 		
@@ -334,7 +312,6 @@ public class NeuralNet {
 		return costResult;
 	}
 
-	
 	public double[] unravel(ArrayList<Double[][]> unravelItems)
 	{
 		ArrayList<Double> myList = new ArrayList<Double>();
@@ -430,6 +407,8 @@ public class NeuralNet {
 	
 	public void saveWeights()
 	{
+		//Something doesn't work here if you have the file already existing.  Think we need
+		//to first delete the old file then write the new file.
 		try(  PrintWriter out = new PrintWriter( this.filePath + this.saveFile )  ){
 			String networkDescriptionString = "";
 			for(int i = 0; i < networkDescription.length; i++)

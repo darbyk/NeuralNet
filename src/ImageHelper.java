@@ -14,7 +14,7 @@ public class ImageHelper {
 	
 	public static void main(String[] args)
 	{
-		ImageHelper helper = new ImageHelper("C:\\Users\\Darby\\OneDrive\\Documents\\");
+		ImageHelper helper = new ImageHelper("data\\");
 		Double[] array = helper.extractBytes("eight3.png");
 		for(Double d : array)
 		{
