@@ -91,9 +91,6 @@ public class NeuralNet {
 		
 //		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "729.9.6.1.txt", "729.9.6.1.txt");
 		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt");
-//		System.out.println();
-//		System.out.println(NN.weights.get(2).length + " x " + NN.weights.get(2)[0].length);
-//		printMatrix(NN.weights.get(2));
 
 		NN.calculateForwardProp();
 		double cost = NN.calculateCostFunction(NN.outputData, NN.yHat);
