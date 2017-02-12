@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+//Another comment?
 public class NeuralNet {
 	//LBFGS variables
 	int iflag[] = {0};
