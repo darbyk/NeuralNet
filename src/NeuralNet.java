@@ -59,7 +59,12 @@ public class NeuralNet {
 				helper.extractBytes("four2.png"),
 				helper.extractBytes("four3.png"),
 				helper.extractBytes("eight4.png"),
-				helper.extractBytes("four1.png")
+				helper.extractBytes("four1.png"),
+				helper.extractBytes("black.png"),
+				helper.extractBytes("six2.png"),
+				helper.extractBytes("six3.png"),
+				helper.extractBytes("six4.png"),
+				helper.extractBytes("six5.png")
 		};
 		Double[][] outputData = {
 				{1.},
@@ -80,16 +85,21 @@ public class NeuralNet {
 				{0.},
 				{0.},
 				{1.},
+				{0.},
+				{0.},
+				{0.},
+				{0.},
+				{0.},
 				{0.}
 		};
 		
 		Double[][] testData = {
-				helper.extractBytes("eight4.png"),
-				helper.extractBytes("four1.png")
+				helper.extractBytes("eight16.png"),
+				helper.extractBytes("six1.png")
 		};
 		
 //		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "1_729.11.7.5.1.txt");
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
 
 //		NN.saveWeights();
 		
@@ -107,7 +117,7 @@ public class NeuralNet {
 
 			do
 			{
-				LBFGS.lbfgs(NN.numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, NN.diag, NN.iprint, 1.0e-5, 1.0e-17, NN.iflag);
+				LBFGS.lbfgs(NN.numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, NN.diag, NN.iprint, 1.0e-4, 1.0e-17, NN.iflag);
 				NN.reravel(unraveledWeights, NN.weights);
 				NN.calculateForwardProp();
 				NN.calculateCostFunctionPrimes();
@@ -210,9 +220,11 @@ public class NeuralNet {
 		this.inputData = inputData;
 		this.outputData = outputData;
 		this.networkDescription = networkDescription;
-		
+		this.loadFile = loadFile;
+		this.saveFile = saveFile;
 		File weightInitiatorPath = new File(filePath + loadFile);
 		
+		//Read from file and initialize weights
 		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
 			StringBuilder sb = new StringBuilder();
 		    String line = br.readLine();
