@@ -13,7 +13,7 @@ public class NeuralNet {
 	int icall;
 	double diag[];
 	int numberOfVariables=0;
-	String filePath = "C:\\Users\\Darby\\OneDrive\\Documents\\neuralnet\\";
+	String filePath = "C:\\NeuralNet\\";
 	String loadFile = "test.txt";
 	String saveFile = "test.txt";
 
@@ -33,7 +33,7 @@ public class NeuralNet {
 		System.out.println("Begin matrix initialization...");
 		int[] networkDescription = {729,11,7,5,1};
 //		int[] networkDescription = {2,3,1};
-//		Double[][] inputData = {{.3,.5,}, {.5,.1,}, {.10,.2,}};
+//		Double[][] inputData = {{.3,.5,}, {.5,.1,}, {1.,.2,}};
 //		Double[][] outputData = {{.75}, {.82}, {.93}};
 //		Double[][] inputData = {{0.1,0.1},{0.45,0.1},{0.1,0.2},{0.2,0.2},{0.35,0.2},{0.75,0.2},{0.3,0.3},{0.55,0.3},{0.7,0.3},{0.85,0.3},{0.05,0.4},{0.35,0.4},{0.45,0.4},{0.7,0.4},{0.9,0.4},{0.25,0.5},{0.6,0.5},{0.15,0.6},{0.35,0.6},{0.85,0.6},{0.05,0.7},{0.15,0.6},{0.2,0.8},{0.25,0.7},{0.45,0.8},{0.55,0.7},{0.55,0.9},{0.7,0.7},{0.7,0.9},{0.85,0.9},{0.9,0.7}};
 //		Double[][] outputData = {{0.},{0.},{0.},{0.},{0.},{0.},{1.},{0.},{1.},{0.},{0.},{1.},{1.},{1.},{0.},{1.},{1.},{0.},{1.},{0.},{0.},{0.},{0.},{1.},{0.},{1.},{0.},{1.},{0.},{0.},{0.}};
@@ -88,9 +88,11 @@ public class NeuralNet {
 				helper.extractBytes("four1.png")
 		};
 		
-//		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "729.9.6.1.txt", "729.9.6.1.txt");
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt");
+//		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "1_729.11.7.5.1.txt");
 
+//		NN.saveWeights();
+		
 		NN.calculateForwardProp();
 		double cost = NN.calculateCostFunction(NN.outputData, NN.yHat);
 		
@@ -122,7 +124,6 @@ public class NeuralNet {
 		}
 		
 		NN.saveWeights();
-		
 		NN.inputData = testData;
 		NN.calculateForwardProp();
 		System.out.println("******");
@@ -358,17 +359,17 @@ public class NeuralNet {
 	
 	public void calculateCostFunctionPrimes()
 	{
-		double epsilon = .000001;
+		double epsilon = .00000001;
 
 		double[] unraveled = this.unravel(weights);
-		double[] perturbed = new double[unraveled.length];
 		double[] gradient = new double[unraveled.length];
-		for(int i = 0; i < perturbed.length; i++)
-		{
-			perturbed[i] = 0;
-		}
-		System.out.println("unraveled length: " + unraveled.length);
+		
+		//We come into this method with varying weights from the original set sometimes.  Therefore, calculate the cost and store it.
+		calculateForwardProp();
+		this.calculateCostFunction(outputData, yHat);
 		double origCost = this.cost;
+
+		System.out.println("unraveled length: " + unraveled.length);
 		for(int i = 0; i < unraveled.length; i++)
 		{
 			unraveled[i] = unraveled[i] + epsilon;
@@ -376,20 +377,23 @@ public class NeuralNet {
 			calculateForwardProp();
 			this.calculateCostFunction(outputData, yHat);
 			double pCost = this.cost;
+
+			gradient[i] = (pCost - origCost) / (epsilon);
 			
-			unraveled[i] = unraveled[i] - epsilon - epsilon;
-			this.reravel(unraveled, this.weights);
-			calculateForwardProp();
-			this.calculateCostFunction(outputData, yHat);
-			double nCost = this.cost;
-			
-			gradient[i] = (pCost - nCost) / (2*epsilon);
-//			gradient[i] = (pCost - origCost) / (epsilon);
+/*			This was an old way of calculating the partial derivative.  Now we just choose a smaller 
+ * 			delta, calculate the original cost at the top, and only move a weight by one delta.
+ * 			This effectively halves the number of evaluations for calculating the cost function primes.
+*/			
+//			unraveled[i] = unraveled[i] - epsilon - epsilon;
+//			this.reravel(unraveled, this.weights);
+//			calculateForwardProp();
+//			this.calculateCostFunction(outputData, yHat);
+//			double nCost = this.cost;
+//			gradient[i] = (pCost - nCost) / (2*epsilon);
 			
 			unraveled[i] = unraveled[i] - epsilon;
 			this.reravel(unraveled, this.weights);
 		}
-		
 		this.reravel(gradient, this.gradients);
 	}
 		
