@@ -31,7 +31,7 @@ public class NeuralNet {
 	public static void main(String[] args)
 	{
 		System.out.println("Begin matrix initialization...");
-		int[] networkDescription = {729,11,7,5,1};
+		int[] networkDescription = {729,12,6,3,1};
 //		int[] networkDescription = {2,3,1};
 //		Double[][] inputData = {{.3,.5,}, {.5,.1,}, {1.,.2,}};
 //		Double[][] outputData = {{.75}, {.82}, {.93}};
@@ -47,24 +47,24 @@ public class NeuralNet {
 				helper.extractBytes("five1.png"),
 				helper.extractBytes("eight3.png"),
 				helper.extractBytes("eight5.png"),
-				helper.extractBytes("eight6.png"),
-				helper.extractBytes("nine1.png"),
-				helper.extractBytes("zero1.png"),
-				helper.extractBytes("eight7.png"),
-				helper.extractBytes("eight8.png"),
-				helper.extractBytes("eight10.png"),
-				helper.extractBytes("eight11.png"),
-				helper.extractBytes("eight12.png"),
-				helper.extractBytes("eight14.png"),
-				helper.extractBytes("four2.png"),
-				helper.extractBytes("four3.png"),
-				helper.extractBytes("eight4.png"),
-				helper.extractBytes("four1.png"),
-				helper.extractBytes("black.png"),
-				helper.extractBytes("six2.png"),
-				helper.extractBytes("six3.png"),
-				helper.extractBytes("six4.png"),
-				helper.extractBytes("six5.png")
+				helper.extractBytes("eight6.png")
+//				helper.extractBytes("nine1.png"),
+//				helper.extractBytes("zero1.png"),
+//				helper.extractBytes("eight7.png"),
+//				helper.extractBytes("eight8.png"),
+//				helper.extractBytes("eight10.png"),
+//				helper.extractBytes("eight11.png"),
+//				helper.extractBytes("eight12.png"),
+//				helper.extractBytes("eight14.png"),
+//				helper.extractBytes("four2.png"),
+//				helper.extractBytes("four3.png"),
+//				helper.extractBytes("eight4.png"),
+//				helper.extractBytes("four1.png"),
+//				helper.extractBytes("black.png"),
+//				helper.extractBytes("six2.png"),
+//				helper.extractBytes("six3.png"),
+//				helper.extractBytes("six4.png"),
+//				helper.extractBytes("six5.png")
 		};
 		Double[][] outputData = {
 				{1.},
@@ -73,24 +73,24 @@ public class NeuralNet {
 				{0.},
 				{1.},
 				{1.},
-				{1.},
-				{0.},
-				{0.},
-				{1.},
-				{1.},
-				{1.},
-				{1.},
-				{1.},
-				{1.},
-				{0.},
-				{0.},
-				{1.},
-				{0.},
-				{0.},
-				{0.},
-				{0.},
-				{0.},
-				{0.}
+				{1.}
+//				{0.},
+//				{0.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{0.},
+//				{0.},
+//				{1.},
+//				{0.},
+//				{0.},
+//				{0.},
+//				{0.},
+//				{0.},
+//				{0.}
 		};
 		
 		Double[][] testData = {
@@ -98,8 +98,8 @@ public class NeuralNet {
 				helper.extractBytes("six1.png")
 		};
 		
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "AlexTest_729.12.6.3.1.txt");
 //		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
 
 //		NN.saveWeights();
 		
