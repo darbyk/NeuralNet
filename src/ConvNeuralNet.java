@@ -71,6 +71,8 @@ public class ConvNeuralNet {
 				{
 					imageValue = image[imageIndexX][imageIndexY];
 				}
+				
+				//Dot product
 				resultPoint += filter[i][j] * imageValue;
 				filterSummation += filter[i][j];
 			}

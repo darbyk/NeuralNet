@@ -98,7 +98,7 @@ public class NeuralNet {
 				helper.extractBytes("six1.png")
 		};
 		
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "AlexTest_729.12.6.3.1.txt");
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "refactortest_729.12.6.3.1.txt");
 //		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
 
 //		NN.saveWeights();
@@ -146,66 +146,33 @@ public class NeuralNet {
 		iprint [ 2 -1] = 0;
 		iprint [ 0] = 1;
 
-		iflag[0]=0;
-		icall=0;
+		iflag[0] = 0;
+		icall = 0;
 	}
 
 	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData)
 	{
+		//Setup for LBFGS algorithm
+		this();
+		
 		//Begin initialization of network
 		this.inputData = inputData;
 		this.outputData = outputData;
 		this.networkDescription = networkDescription;
 		
 		//Initialize Weights
-		for(int i = 0; i < networkDescription.length - 1; i++)
-		{
-			Double[][] tempWeights = new Double[networkDescription[i]][networkDescription[i+1]];
-			for(int x = 0; x < networkDescription[i]; x++)
-			{
-				for(int y = 0; y < networkDescription[i+1]; y++)
-				{
-					double randomNum = Math.random()*2-1;
-					int curWeightInt = ((int)(randomNum * 1000));
-					double curWeight = curWeightInt/1000.0;
-					tempWeights[x][y] = curWeight;
-				}
-			}
-			weights.add(tempWeights);
-			printMatrix(tempWeights);
-		}
-		
-		
+		initializeValuesInMatrix(true, weights);
 		
 		//Initialize Gradients
-		for(int i = 0; i < networkDescription.length - 1; i++)
-		{
-			Double[][] tempGradient = new Double[networkDescription[i]][networkDescription[i+1]];
-			for(int x = 0; x < networkDescription[i]; x++)
-			{
-				for(int y = 0; y < networkDescription[i+1]; y++)
-				{
-					tempGradient[x][y] = 0.0;
-				}
-			}
-			gradients.add(tempGradient);
-//			printMatrix(tempGradient);
-		}
+		initializeValuesInMatrix(false, gradients);
 		
-		
-		//Setup for LBFGS algorithm
-		iprint [ 1 -1] = 1;
-		iprint [ 2 -1] = 0;
-		iprint [ 0] = 1;
-		iflag[0]=0;
-		icall=0;
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
 			numberOfVariables += (networkDescription[i] * networkDescription[i+1]);
 		}
 		diag = new double [ numberOfVariables ];
 	}
-
+	
 	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData, String saveFile)
 	{
 		this(networkDescription, inputData, outputData);
@@ -216,6 +183,10 @@ public class NeuralNet {
 	
 	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData, String loadFile, String saveFile)
 	{
+		
+		//Setup for LBFGS algorithm
+		this();
+		
 		//Begin initialization of network
 		this.inputData = inputData;
 		this.outputData = outputData;
@@ -272,32 +243,41 @@ public class NeuralNet {
 		
 		
 		//Initialize Gradients
-		for(int i = 0; i < networkDescription.length - 1; i++)
-		{
-			Double[][] tempGradient = new Double[networkDescription[i]][networkDescription[i+1]];
-			for(int x = 0; x < networkDescription[i]; x++)
-			{
-				for(int y = 0; y < networkDescription[i+1]; y++)
-				{
-					tempGradient[x][y] = 0.0;
-				}
-			}
-			gradients.add(tempGradient);
-//			printMatrix(tempGradient);
-		}
+		initializeValuesInMatrix(false, gradients);
 		
-		
-		//Setup for LBFGS algorithm
-		iprint [ 1 -1] = 1;
-		iprint [ 2 -1] = 0;
-		iprint [ 0] = 1;
-		iflag[0]=0;
-		icall=0;
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
 			numberOfVariables += (networkDescription[i] * networkDescription[i+1]);
 		}
 		diag = new double [ numberOfVariables ];
+	}
+	
+	
+	private void initializeValuesInMatrix(boolean isRandom, ArrayList<Double[][]> initializeItems)
+	{
+		for(int i = 0; i < networkDescription.length - 1; i++)
+		{
+			Double[][] tempLayer = new Double[networkDescription[i]][networkDescription[i+1]];
+			for(int x = 0; x < networkDescription[i]; x++)
+			{
+				for(int y = 0; y < networkDescription[i+1]; y++)
+				{
+					if(isRandom)
+					{
+						double randomNum = Math.random()*2-1;
+						int curWeightInt = ((int)(randomNum * 1000));
+						double curWeight = curWeightInt/1000.0;
+						tempLayer[x][y] = curWeight;
+					}
+					else
+					{
+						tempLayer[x][y] = 0.0;
+					}
+				}
+			}
+			initializeItems.add(tempLayer);
+			printMatrix(tempLayer);
+		}
 	}
 	
 	public void calculateForwardProp()
@@ -308,9 +288,7 @@ public class NeuralNet {
 			Double[][] z = new Double[a.length][weights.get(i)[0].length];
 			z = NeuralMatrix.multiply(a, weights.get(i));
 			a = NeuralMatrix.applySigmoid(z);
-//			printMatrix(z);
 		}
-//		printMatrix(a);
 		yHat = a;
 	}
 
@@ -391,18 +369,7 @@ public class NeuralNet {
 			double pCost = this.cost;
 
 			gradient[i] = (pCost - origCost) / (epsilon);
-			
-/*			This was an old way of calculating the partial derivative.  Now we just choose a smaller 
- * 			delta, calculate the original cost at the top, and only move a weight by one delta.
- * 			This effectively halves the number of evaluations for calculating the cost function primes.
-*/			
-//			unraveled[i] = unraveled[i] - epsilon - epsilon;
-//			this.reravel(unraveled, this.weights);
-//			calculateForwardProp();
-//			this.calculateCostFunction(outputData, yHat);
-//			double nCost = this.cost;
-//			gradient[i] = (pCost - nCost) / (2*epsilon);
-			
+
 			unraveled[i] = unraveled[i] - epsilon;
 			this.reravel(unraveled, this.weights);
 		}
@@ -423,8 +390,6 @@ public class NeuralNet {
 	
 	public void saveWeights()
 	{
-		//Something doesn't work here if you have the file already existing.  Think we need
-		//to first delete the old file then write the new file.
 		try(  PrintWriter out = new PrintWriter( this.filePath + this.saveFile )  ){
 			String networkDescriptionString = "";
 			for(int i = 0; i < networkDescription.length; i++)
@@ -432,7 +397,6 @@ public class NeuralNet {
 				networkDescriptionString += networkDescription[i] + " ";
 			}
 			
-//			ArrayList<Double[][]> weights = new ArrayList<Double[][]>();
 			ArrayList<String> weightsString = new ArrayList<String>();
 			for(int i = 0; i < weights.size(); i++)
 			{
@@ -459,7 +423,6 @@ public class NeuralNet {
 		    out.println("EOF");
 		    System.out.println("******************File save completed");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
