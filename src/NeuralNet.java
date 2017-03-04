@@ -21,8 +21,12 @@ public class NeuralNet {
 	Double[][] inputData;
 	Double[][] outputData;
 	int[] networkDescription;
+	double complexityCostLambda = 0.0001;
 	ArrayList<Double[][]> weights = new ArrayList<Double[][]>();
 	ArrayList<Double[][]> gradients = new ArrayList<Double[][]>();
+	
+	//Normalization Helper
+	double[] normalizationFactors;
 	
 	//Results
 	Double[][] yHat;
@@ -31,23 +35,25 @@ public class NeuralNet {
 	public static void main(String[] args)
 	{
 		System.out.println("Begin matrix initialization...");
-		int[] networkDescription = {729,12,6,3,1};
-//		int[] networkDescription = {2,3,1};
-//		Double[][] inputData = {{.3,.5,}, {.5,.1,}, {1.,.2,}};
-//		Double[][] outputData = {{.75}, {.82}, {.93}};
+//		int[] networkDescription = {729,12,6,3,1};
+		int[] networkDescription = {2,3,1};
+		Double[][] inputData = {{3.,5.}, {5.,1.}, {10.,2.}};
+		Double[][] outputData = {{.75}, {.82}, {.93}};
 //		Double[][] inputData = {{0.1,0.1},{0.45,0.1},{0.1,0.2},{0.2,0.2},{0.35,0.2},{0.75,0.2},{0.3,0.3},{0.55,0.3},{0.7,0.3},{0.85,0.3},{0.05,0.4},{0.35,0.4},{0.45,0.4},{0.7,0.4},{0.9,0.4},{0.25,0.5},{0.6,0.5},{0.15,0.6},{0.35,0.6},{0.85,0.6},{0.05,0.7},{0.15,0.6},{0.2,0.8},{0.25,0.7},{0.45,0.8},{0.55,0.7},{0.55,0.9},{0.7,0.7},{0.7,0.9},{0.85,0.9},{0.9,0.7}};
 //		Double[][] outputData = {{0.},{0.},{0.},{0.},{0.},{0.},{1.},{0.},{1.},{0.},{0.},{1.},{1.},{1.},{0.},{1.},{1.},{0.},{1.},{0.},{0.},{0.},{0.},{1.},{0.},{1.},{0.},{1.},{0.},{0.},{0.}};
 		
 		ImageHelper helper = new ImageHelper("data\\");
 		
-		Double[][] inputData = {
-				helper.extractBytes("eight1.png"),
-				helper.extractBytes("eight2.png"),
-				helper.extractBytes("one1.png"),
-				helper.extractBytes("five1.png"),
-				helper.extractBytes("eight3.png"),
-				helper.extractBytes("eight5.png"),
-				helper.extractBytes("eight6.png")
+		
+		
+//		Double[][] inputData = {
+//				helper.extractBytes("eight1.png"),
+//				helper.extractBytes("eight2.png"),
+//				helper.extractBytes("one1.png"),
+//				helper.extractBytes("five1.png"),
+//				helper.extractBytes("eight3.png"),
+//				helper.extractBytes("eight5.png"),
+//				helper.extractBytes("eight6.png"),
 //				helper.extractBytes("nine1.png"),
 //				helper.extractBytes("zero1.png"),
 //				helper.extractBytes("eight7.png"),
@@ -65,15 +71,15 @@ public class NeuralNet {
 //				helper.extractBytes("six3.png"),
 //				helper.extractBytes("six4.png"),
 //				helper.extractBytes("six5.png")
-		};
-		Double[][] outputData = {
-				{1.},
-				{1.},
-				{0.},
-				{0.},
-				{1.},
-				{1.},
-				{1.}
+//		};
+//		Double[][] outputData = {
+//				{1.},
+//				{1.},
+//				{0.},
+//				{0.},
+//				{1.},
+//				{1.},
+//				{1.},
 //				{0.},
 //				{0.},
 //				{1.},
@@ -91,17 +97,19 @@ public class NeuralNet {
 //				{0.},
 //				{0.},
 //				{0.}
-		};
+//		};
 		
 		Double[][] testData = {
-				helper.extractBytes("eight16.png"),
-				helper.extractBytes("six1.png")
+//				helper.extractBytes("eight16.png"),
+//				helper.extractBytes("six1.png")
+				{8.,3.}
 		};
 		
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "refactortest_729.12.6.3.1.txt");
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "Dave_Test_2_3_1.txt");
 //		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
 
 //		NN.saveWeights();
+		testData = NN.normalizeMatrix(testData);
 		
 		NN.calculateForwardProp();
 		double cost = NN.calculateCostFunction(NN.outputData, NN.yHat);
@@ -160,6 +168,10 @@ public class NeuralNet {
 		this.outputData = outputData;
 		this.networkDescription = networkDescription;
 		
+
+		//Normalize Weights
+		normalizeMatrix(this.inputData);
+		
 		//Initialize Weights
 		initializeValuesInMatrix(true, weights);
 		
@@ -194,6 +206,9 @@ public class NeuralNet {
 		this.loadFile = loadFile;
 		this.saveFile = saveFile;
 		File weightInitiatorPath = new File(filePath + loadFile);
+		
+		//Normalize Weights
+		normalizeMatrix(this.inputData);
 		
 		//Read from file and initialize weights
 		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
@@ -252,6 +267,35 @@ public class NeuralNet {
 		diag = new double [ numberOfVariables ];
 	}
 	
+	public Double[][] normalizeMatrix(Double[][] normalizingMatrix)
+	{
+		//Find Max Value. If already found, then skip
+		double[] maxOfColumn;
+		if(normalizationFactors == null)
+		{
+			maxOfColumn = new double[normalizingMatrix[0].length];
+			for(int i = 0; i < normalizingMatrix.length; i++)
+			{
+				for(int j = 0; j < normalizingMatrix[i].length; j++)
+				{
+					if(maxOfColumn[j] < normalizingMatrix[i][j])
+						maxOfColumn[j] = normalizingMatrix[i][j];
+				}
+			}
+			normalizationFactors = maxOfColumn;
+		}
+		
+		for(int i = 0; i < normalizingMatrix.length; i++)
+		{
+			for(int j = 0; j < normalizingMatrix[i].length; j++)
+			{
+				normalizingMatrix[i][j] = normalizingMatrix[i][j]/normalizationFactors[j];
+			}
+		}
+		
+		return normalizingMatrix;
+	}
+	
 	
 	private void initializeValuesInMatrix(boolean isRandom, ArrayList<Double[][]> initializeItems)
 	{
@@ -294,13 +338,36 @@ public class NeuralNet {
 
 	public double calculateCostFunction(Double[][] Y, Double[][] yHat)
 	{
+		//Calculate weight complexity
+		double complexityCost = this.calculateWeightComplexity();
 		
+		//Calculate the yHat - Y, square it, then half it (1/2) (y-yHat)^2
 		Double[][] costResultMatrix = NeuralMatrix.subtract(Y, yHat);
 		costResultMatrix = NeuralMatrix.multiplyVector(costResultMatrix, costResultMatrix);
-		double costResult = NeuralMatrix.sumVector(costResultMatrix)/2;
-		this.cost = costResult;
+		double answerCost = NeuralMatrix.sumVector(costResultMatrix)/2;
 		
-		return costResult;
+		//Sum our MatrixCost and our weightCost
+		this.cost = answerCost + complexityCost;
+		
+		return this.cost;
+	}
+	
+	public double calculateWeightComplexity()
+	{
+		double weightComplexity = 0.0;
+		for(int i = 0; i < this.weights.size(); i++)
+		{
+			Double[][] curWeightLayer = this.weights.get(i);
+			for(int x = 0; x < curWeightLayer.length; x++)
+			{
+				for(int y = 0; y < curWeightLayer[0].length; y++)
+				{
+					weightComplexity += (curWeightLayer[x][y]) * (curWeightLayer[x][y]);
+				}
+			}
+		}
+		weightComplexity = weightComplexity * (complexityCostLambda/2.0);
+		return weightComplexity;
 	}
 
 	public double[] unravel(ArrayList<Double[][]> unravelItems)
