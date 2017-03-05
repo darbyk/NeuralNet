@@ -21,7 +21,7 @@ public class ConvNeuralNet {
 				{1.,1.,1.}
 		};
 		Double[][] result = cnn.convolution(myImage, myFilter);
-		NeuralNet.printMatrix(result);
+		NeuralMatrix.printMatrix(result);
 	}
 	
 	public ConvNeuralNet()
