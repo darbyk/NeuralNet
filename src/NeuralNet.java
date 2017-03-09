@@ -198,9 +198,6 @@ public class NeuralNet {
 		this.saveFile = saveFile;
 		File weightInitiatorPath = new File(filePath + loadFile);
 		
-		//Normalize Weights
-		normalizeMatrix(this.inputData);
-		
 		//Read from file and initialize weights
 		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
 			StringBuilder sb = new StringBuilder();
@@ -246,16 +243,6 @@ public class NeuralNet {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
-		//Initialize Gradients
-		initializeValuesInMatrix(false, gradients);
-		
-		for(int i = 0; i < networkDescription.length - 1; i++)
-		{
-			numberOfVariables += (networkDescription[i] * networkDescription[i+1]);
-		}
-		diag = new double [ numberOfVariables ];
 	}
 	
 	
