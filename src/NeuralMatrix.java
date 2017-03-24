@@ -239,6 +239,28 @@ public class NeuralMatrix {
         }
 	}
 
+	//Helps print out a matrix
+	public static void printMatrix(Double[][][][] a)
+	{
+        for (int i = 0; i < a.length; i++)
+        {
+            for (int j = 0; j < a[0].length; j++)
+            {
+            	for(int k = 0; k < a[0][0].length; k++)
+            	{
+            		for(int l = 0; l < a[0][0][0].length; l++)
+            		{
+            			System.out.print(a[i][j][k][l] + ", ");
+            		}
+            		System.out.println();
+            	}
+            	System.out.println("");
+            }
+            System.out.println("*");
+        }
+        System.out.println("----Matrix Print Complete----");
+	}
+	
     // test client
     public static void main(String[] args) {
         System.out.println("D");

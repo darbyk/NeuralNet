@@ -1,23 +1,68 @@
 import java.util.ArrayList;
 
 public class ConvNeuralNet {
+	//LBFGS variables
+	int iflag[] = {0};
+	int iprint[] = new int[2];
+	int icall;
+	double diag[];
+	int numberOfVariables=0;
+	String filePath = "C:\\NeuralNet\\";
+	String loadFile = "test.txt";
+	String saveFile = "test.txt";
 	
 	//Network Descriptors
+	Double[][] inputData;
+	Double[][] outputData;
 	int[] networkDescription;
-	int[] convNetworkDescription;
+	int[][] convNetworkDescription;
+	double complexityCostLambda = 0.0001;
 	ArrayList<Double[][][][]> networkFilters = new ArrayList<Double[][][][]>();
+	ArrayList<Double[][][][]> networkGradients = new ArrayList<Double[][][][]>();
 	
+	//Results
+	Double[][] yHat;
+	Double[][][] yHatCNN;
+	double cost;
+		
 	
 	public static void main(String[] args)
 	{
-		ConvNeuralNet cnn = new ConvNeuralNet();
+		//Begin CNN initialization tests
+		//convNetworkDescription[x][0] = filterSize (dimensions)
+		//convNetworkDescription[x][1] = number of filters
+		//convNetworkDescription[x][2] = stride
+		//convNetworkDescription[x][3] = padding
+		int[][] cnnNetDesc = {
+			{7, 2, 1, 1},
+			{5, 2, 1, 1},
+			{3, 3, 1, 1}
+		};
+		int[] netDesc = {
+			10, 5, 1	
+		};
+		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc);
+		
+		System.out.println(cnn.numberOfVariables);
+		
 		
 		//Starting Unit Tests;
 		//Represents my multiple images, across multiple color channels
 		//This is a 4D array
+		//myImage[x][][][] = number of input images
+		//myImage[][x][][] = number of input channels (depth dimension of your image)
+		//myImage[][][x][] = length dimension of your image
+		//myimage[][][][x] = width dimension of your image
 		Double[][][][] myImage = {
-			//Image 1 with 2 color channels
+			//Image 1 with 3 color channels
 			{
+				{
+					{0.,0.,2.,1.,2.},
+					{1.,2.,0.,2.,1.},
+					{2.,2.,2.,1.,1.},
+					{0.,2.,0.,1.,2.},
+					{0.,2.,0.,0.,1.}
+				},
 				{
 					{0.,0.,2.,1.,2.},
 					{1.,2.,0.,2.,1.},
@@ -33,8 +78,15 @@ public class ConvNeuralNet {
 					{0.,2.,0.,0.,1.}
 				}
 			},
-			//Image 2 with 2 color channels
+			//Image 2 with 3 color channels
 			{
+				{
+					{0.,0.,2.,1.,2.},
+					{1.,2.,0.,2.,1.},
+					{2.,2.,2.,1.,1.},
+					{0.,2.,0.,1.,2.},
+					{0.,2.,0.,0.,1.}
+				},
 				{
 					{0.,0.,2.,1.,2.},
 					{1.,2.,0.,2.,1.},
@@ -54,6 +106,10 @@ public class ConvNeuralNet {
 		
 		//Represents my fitler set (I have multiple filter sets, where each filter set 
 		//consists of multiple filters) I want to apply at the first convolution level
+		//myFilter[x][][][] = the number of filter sets I have at one layer in my CNN
+		//myFilter[][x][][] = the depth of the filter set at a particular layer
+		//myFilter[][][x][] = the length of a filter
+		//myFilter[][][][x] = the widht of a filter
 		Double[][][][] myFilter = {
 			//Filter set 1 that works across 2 color channels
 			{
@@ -96,34 +152,76 @@ public class ConvNeuralNet {
 		int stride = 1;
 		
 		//4D array is: number of images x number of filter sets x output length x output width
+		//result[x][][][] = the result of the convolution of each image, 
+		//       so result[1][][][] holds the convolution result for image 1 - this mimicks bulk processing
+		//result[][x][][] = the depth dimension of my convolution volume output for a given image
+		//result[][][x][] = the length dimension of my convolution volume output
+		//result[][][][x] = the width dimension of my convolution volume output
 		int outputImageLength = (int) Math.ceil(myImage[0][0].length/(double)stride);
 		int outputImageWidth = (int) Math.ceil(myImage[0][0][0].length/(double)stride);
 		Double[][][][] result = new Double[myImage.length][cnn.networkFilters.get(0).length][outputImageLength][outputImageWidth];
 		
 		//Applies my filter sets across each image
 		//But now I need to store the result in a 4D array
+		//Repeat this method over and over again (this is kinda my forward prop
 		for(int i = 0; i < myImage.length; i++)
 		{
 			for(int j = 0; j < cnn.networkFilters.get(0).length; j++)
 			{
+				//cnn.convolution returns a 2D matrix, hence we store it in our result
 				result[i][j] = cnn.convolution(myImage[i], cnn.networkFilters.get(0)[j], stride);
 			}
 			
 		}
 		
-		for(int i = 0; i < result.length; i++)
-		{
-			for(int j = 0; j < result[0].length; j++)
-			{
-				NeuralMatrix.printMatrix(result[i][j]);
-				System.out.println("--New Matrix--");
-			}
-		}
+		
+		
+		
+		
+//		for(int i = 0; i < result.length; i++)
+//		{
+//			for(int j = 0; j < result[0].length; j++)
+//			{
+//				NeuralMatrix.printMatrix(result[i][j]);
+//				System.out.println("--New Matrix--");
+//			}
+//		}
 	}
 	
 	public ConvNeuralNet()
 	{
+		iprint [ 1 -1] = 1;
+		iprint [ 2 -1] = 0;
+		iprint [ 0] = 1;
+
+		iflag[0] = 0;
+		icall = 0;
+	}
+	public ConvNeuralNet(int[] networkDescription, int[][] convNetworkDescription)
+	{
+		//Setup for LBFGS
+		this();
 		
+		//Initialize Network Descriptions
+		this.networkDescription = networkDescription;
+		this.convNetworkDescription = convNetworkDescription;
+		
+		//Initialize Weights
+		initializeValuesInMatrix5D(true, networkFilters);
+		
+		//Initialize Gradients
+		initializeValuesInMatrix5D(false, networkGradients);
+		
+		for(int i = 0; i < convNetworkDescription.length; i++)
+		{
+			numberOfVariables += networkFilters.size() * 
+					networkFilters.get(i).length * 
+					networkFilters.get(i)[0].length *
+					networkFilters.get(i)[0][0].length *
+					networkFilters.get(i)[0][0][0].length;
+//			numberOfVariables += (convNetworkDescription[i][1] * convNetworkDescription[i][0] * convNetworkDescription[i][0]);
+		}
+		diag = new double [ numberOfVariables ];
 	}
 	
 	public Double[][] convolution(Double[][][] image, Double[][][] filter, int stride)
@@ -196,7 +294,7 @@ public class ConvNeuralNet {
 	}
 
 	
-	private void initializeValuesInMatrix(boolean isRandom, ArrayList<Double[][]> initializeItems)
+	private void initializeValuesInMatrix3D(boolean isRandom, ArrayList<Double[][]> initializeItems)
 	{
 		System.out.println("Initializing Weights...");
 		for(int i = 0; i < networkDescription.length - 1; i++)
@@ -217,6 +315,71 @@ public class ConvNeuralNet {
 					{
 						tempLayer[x][y] = 0.0;
 					}
+				}
+			}
+			initializeItems.add(tempLayer);
+			NeuralMatrix.printMatrix(tempLayer);
+		}
+	}
+	
+	//convNetworkDescription[x][0] = filterSize (dimensions)
+	//convNetworkDescription[x][1] = number of filters
+	//convNetworkDescription[x][2] = stride
+	//convNetworkDescription[x][3] = padding
+	//
+	//filterSet[][][][] create an array of filterSets
+	//filterSet[x][][][] = the number of filter sets at a given location the CNN
+	//filterSet[][x][][] = the number of filters needed to properly create a filter set (depth dimension)
+	//filterSet[][][x][] = the length dimension of the filter set
+	//filterSet[][][][x] = the width dimension of the filter set
+	private void initializeValuesInMatrix5D(boolean isRandom, ArrayList<Double[][][][]> initializeItems)
+	{
+		System.out.println("Initializing Weights...");
+		
+		//Add some random stuff in
+		for(int i = 0; i < convNetworkDescription.length; i++)
+		{
+			Double tempLayer[][][][];
+			if(i == 0)
+			{
+				tempLayer = new Double
+						[convNetworkDescription[0][1]]
+						[3] //we have an image with 3 color channels coming in
+						[convNetworkDescription[0][0]]
+						[convNetworkDescription[0][0]];
+			}
+			else
+			{
+				tempLayer = new Double
+						[convNetworkDescription[i][1]] //number of filters to apply at this region
+						[convNetworkDescription[i-1][1]] //number of filters in the filter set -> This must be equal to the number of filters in the previous layer
+						[convNetworkDescription[i][0]] //length of a filter
+						[convNetworkDescription[i][0]]; //width of a filter	
+			}
+			
+			for(int x = 0; x < tempLayer.length; x++)
+			{
+				for(int y = 0; y < tempLayer[0].length; y++)
+				{
+					for(int z = 0; z < tempLayer[0][0].length; z++)
+					{
+						for(int a = 0; a < tempLayer[0][0][0].length; a++)
+						{
+							if(isRandom)
+							{
+								double randomNum = Math.random()*2-1;
+								int curWeightInt = ((int)(randomNum * 1000));
+								double curWeight = curWeightInt/1000.0;
+								tempLayer[x][y][z][a] = curWeight;
+							}
+							else
+							{
+								tempLayer[x][y][z][a] = 0.0;
+							}
+						}
+						
+					}
+					
 				}
 			}
 			initializeItems.add(tempLayer);
