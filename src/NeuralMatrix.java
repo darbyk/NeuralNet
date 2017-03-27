@@ -261,6 +261,32 @@ public class NeuralMatrix {
         System.out.println("----Matrix Print Complete----");
 	}
 	
+	//Helps apply ReLu voer our 4D matrix
+	public static Double[][][][] applyRelu(Double[][][][] a)
+	{
+		int d1 = a.length;
+		int d2 = a[0].length;
+		int d3 = a[0][0].length;
+		int d4 = a[0][0][0].length;
+		Double result[][][][] = new Double[d1][d2][d3][d4];
+		for (int i = 0; i < a.length; i++)
+        {
+            for (int j = 0; j < a[0].length; j++)
+            {
+            	for(int k = 0; k < a[0][0].length; k++)
+            	{
+            		for(int l = 0; l < a[0][0][0].length; l++)
+            		{
+            			result[i][j][k][l] = Math.max(0, a[i][j][k][l]);
+            		}
+            	}
+            }
+        }
+        System.out.println("----ReLu Complete----");
+		
+		return result;
+	}
+	
     // test client
     public static void main(String[] args) {
         System.out.println("D");
