@@ -20,11 +20,14 @@ public class ConvNeuralNet {
 	ArrayList<Double[][][][]> networkFilters = new ArrayList<Double[][][][]>();
 	ArrayList<Double[][][][]> networkGradients = new ArrayList<Double[][][][]>();
 	
+	//Neural Net
+	NeuralNet nn;
+	
 	//Results
 	Double[][] yHat;
 	Double[][][][] yHatCNN;
 	double cost;
-		
+	
 	
 	public static void main(String[] args)
 	{
@@ -41,11 +44,8 @@ public class ConvNeuralNet {
 		};
 		//First parameter is calculated at another time
 		int[] netDesc = {
-			0, 5, 1	
+			27, 5, 1
 		};
-		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc);
-		
-		System.out.println(cnn.numberOfVariables);
 		
 		
 		//Starting Unit Tests;
@@ -130,7 +130,75 @@ public class ConvNeuralNet {
 			}
 		};
 		
-		cnn.inputData = myImages;
+		ImageHelper helper = new ImageHelper("data\\");
+		
+//		Double[][][][] myImages = {
+//				helper.extractBytesFullChannels("eight1.png"),
+//				helper.extractBytesFullChannels("eight2.png"),
+//				helper.extractBytesFullChannels("one1.png")
+//		};
+		
+		Double[][] outputData = {
+				{1.},
+				{1.}
+//				{0.}
+		};
+		
+		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc, myImages, outputData);
+		
+		System.out.println(cnn.numberOfVariables);
+		
+		
+//		cnn.inputData = myImages;
+		
+		/*
+		ArrayList<Double[][][][]> temp = new ArrayList<Double[][][][]>();
+		for(int a = 0; a  < 2; a ++)
+		{
+			Double[][][][] layer = new Double[2][2][2][2];
+			for(int b = 0; b < 2; b++)
+			{
+				for(int c = 0; c < 2; c++)
+				{
+					for(int d = 0; d < 2; d++)
+					{
+						for(int e = 0; e < 2; e++)
+						{
+							layer[b][c][d][e] = e + a*16 + b*8 + c*4 + d*2 + 0.0;
+						}
+					}
+				}
+			}
+			temp.add(layer);
+		}
+		
+		
+		ArrayList<Double[][]> tempSmall = new ArrayList<Double[][]>();
+		for(int a = 0; a  < 2; a ++)
+		{
+			Double[][] layer = new Double[2][2];
+			for(int b = 0; b < 2; b++)
+			{
+				for(int c = 0; c < 2; c++)
+				{
+					layer[b][c] = a*4 + b*2 + c + 0.0;
+				}
+			}
+			tempSmall.add(layer);
+		}
+		
+		System.out.println("Testing");
+		
+		double[] unravelTest = cnn.unravel(temp, tempSmall);
+		
+		unravelTest[30] = unravelTest[30] + 1;
+		unravelTest[35] = unravelTest[35] + 1;
+		
+		cnn.reravel(unravelTest, temp, tempSmall);
+		
+		System.out.println("Testing");
+		
+		*/
 		
 		//Represents my fitler set (I have multiple filter sets, where each filter set 
 		//consists of multiple filters) I want to apply at the first convolution level
@@ -202,7 +270,66 @@ public class ConvNeuralNet {
 //			
 //		}
 		
+		
+		
+		
+		
+		
 		cnn.calculateForwardProp();
+		
+		
+		cnn.calculateCostFunctionPrimes();
+		System.out.println("******************");
+		System.out.println("Calculating Primes");		
+		
+		for(int i = 0; i < cnn.networkGradients.size(); i++)
+		{
+			for(int j = 0; j < cnn.networkGradients.get(i).length; j++)
+			{
+				for(int k = 0; k < cnn.networkGradients.get(i)[j].length; k++)
+				{
+					NeuralMatrix.printMatrix(cnn.networkGradients.get(i)[j][k]);
+					System.out.println("--New Matrix--");
+				}
+			}
+			System.out.println("*");
+		}
+		
+		System.out.println("Printing NN Gradients");
+		for(int i = 0; i < cnn.nn.networkDescription.length-1; i++)
+		{
+			NeuralMatrix.printMatrix(cnn.nn.gradients.get(i));
+			System.out.println("*");
+		}
+		
+		
+		//Save some temp variables and begin unraveling the weights for back propagation
+		double cost2 = cnn.cost;
+		double[] unraveledWeights = cnn.unravel(cnn.networkFilters, cnn.nn.weights);
+		double[] unraveledGradient = cnn.unravel(cnn.networkGradients, cnn.nn.gradients);
+		System.out.println("Beginning Back propogation...");
+		try {
+
+			do
+			{
+				LBFGS.lbfgs((cnn.numberOfVariables + cnn.nn.numberOfVariables), 300, unraveledWeights, cost2, unraveledGradient, false, cnn.diag, cnn.iprint, 1.0e-4, 1.0e-17, cnn.iflag);
+				cnn.reravel(unraveledWeights, cnn.networkFilters, cnn.nn.weights);
+				cnn.calculateForwardProp();
+				cnn.calculateCostFunctionPrimes();
+				cnn.calculateCostFunction(cnn.outputData, cnn.yHat);
+				cost2 = cnn.cost;
+				unraveledGradient = cnn.unravel(cnn.networkGradients, cnn.nn.gradients);
+				NeuralMatrix.printMatrix(cnn.yHat);
+		
+			} while(cnn.iflag[0] != 0);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("error");
+		}
+		
+		//Back propagation complete. 
+		
 		
 		
 	}
@@ -239,7 +366,16 @@ public class ConvNeuralNet {
 					networkFilters.get(i)[0][0][0].length;
 //			numberOfVariables += (convNetworkDescription[i][1] * convNetworkDescription[i][0] * convNetworkDescription[i][0]);
 		}
-		diag = new double [ numberOfVariables ];
+		
+		nn = new NeuralNet(networkDescription);
+		
+		diag = new double [ numberOfVariables + nn.numberOfVariables];
+	}
+	public ConvNeuralNet(int[] networkDescription, int[][] convNetworkDescription, Double[][][][] inputData, Double[][] outputData)
+	{
+		this(networkDescription, convNetworkDescription);
+		this.inputData = inputData;
+		this.outputData = outputData;
 	}
 	
 	public void calculateForwardProp()
@@ -255,21 +391,26 @@ public class ConvNeuralNet {
 			//z = a.convolve(filter)
 			for(int j = 0; j < a.length; j++)
 			{
-				for(int k = 0; k < networkFilters.get(0).length; k++)
+				//Motherfucker this was 0/i too....Has to be i not 0
+				for(int k = 0; k < networkFilters.get(i).length; k++)
 				{
 					//cnn.convolution returns a 2D matrix, hence we store it in our result
-					z[j][k] = convolution(a[j], networkFilters.get(0)[k], stride);
+					//Fuck is it i or 0 here....It has to be i, I think...if its 0, I think we 
+					//apply the same initial filter over the entire set if it is 0, and therefore, we want
+					//to make sure it is .get(i) to make sure we use every variable...but why 
+					//didn't it break everywhere else, either one solves the problem
+					z[j][k] = convolution(a[j], networkFilters.get(i)[k], stride);
 				}	
 			}
 			a = NeuralMatrix.applyRelu(z);
 		}
 		yHatCNN = a;
 		
-		//Print out some random reuslt
+		//Print out some random result
 		System.out.println();
 		System.out.println();
 		System.out.println();
-		System.out.println("Printing out the final image image convolution result");
+		System.out.println("Printing out the final image convolution result");
 		
 		for(int i = 0; i < yHatCNN.length; i++)
 		{
@@ -280,20 +421,33 @@ public class ConvNeuralNet {
 			}
 		}
 		
+		System.out.println();
+		System.out.println("Printing out the transformed Neural Net input");
 		Double[][] nnInput = transformVolumeToNNInput();
 		NeuralMatrix.printMatrix(nnInput);
+				
+//		networkDescription[0] = nnInput[0].length;
+//		NeuralNet nn = new NeuralNet(networkDescription, nnInput, outputData);
+		nn.inputData = nnInput;
+		nn.outputData = outputData;
+		nn.normalizeMatrix(nn.inputData);
 		
-		Double[][] nnOutput = {
-			{1.}, 
-			{1.}
-		};
-		
-		networkDescription[0] = nnInput[0].length;
-		
-		NeuralNet nn = new NeuralNet(networkDescription, nnInput, nnOutput);
+		System.out.println("Beginning neural net");
 		nn.calculateForwardProp();
 		yHat = nn.yHat;
+		
+		System.out.println("");
+		System.out.println("NN Output");
 		NeuralMatrix.printMatrix(yHat);
+		
+		
+		cost = calculateCostFunction(outputData, yHat);
+		System.out.println("Cost output is");
+		
+		System.out.println(cost);
+		
+		
+		
 	}
 	
 	//Some method to transform the output of the forwardpropogation of CNN to input of NN
@@ -481,7 +635,7 @@ public class ConvNeuralNet {
 	
 	
 	//Helper method.  Takes in some 5D matrix and converts into a 1D matrix
-	public double[] unravel(ArrayList<Double[][][][]> unravelItems)
+	public double[] unravel(ArrayList<Double[][][][]> unravelItems, ArrayList<Double[][]> unravelitemsNeuralNet)
 	{
 		ArrayList<Double> myList = new ArrayList<Double>();
 		for(int i = 0; i < unravelItems.size(); i++)
@@ -502,6 +656,18 @@ public class ConvNeuralNet {
 			}
 		}
 		
+		for(int i = 0; i < unravelitemsNeuralNet.size(); i++)
+		{
+			Double[][] curWeightLayer = unravelitemsNeuralNet.get(i);
+			for(int x = 0; x < curWeightLayer.length; x++)
+			{
+				for(int y = 0; y < curWeightLayer[0].length; y++)
+				{
+					myList.add(curWeightLayer[x][y]);
+				}
+			}
+		}
+		
 		Double[] unraveledList = new Double[myList.size()];
 		unraveledList = myList.toArray(unraveledList);
 		double[] d = new double[myList.size()];
@@ -511,31 +677,32 @@ public class ConvNeuralNet {
 		}
 		return d;
 	}
+
 	//Helper method.  Takes in some 3D matrix and converts into a 1D matrix
-		public Double[] unravel(Double[][][] unravelItems)
+	public Double[] unravel(Double[][][] unravelItems)
+	{
+		ArrayList<Double> myList = new ArrayList<Double>();
+		for(int i = 0; i < unravelItems.length; i++)
 		{
-			ArrayList<Double> myList = new ArrayList<Double>();
-			for(int i = 0; i < unravelItems.length; i++)
+			Double[][] curWeightLayer = unravelItems[i];
+			for(int a = 0; a < curWeightLayer.length; a++)
 			{
-				Double[][] curWeightLayer = unravelItems[i];
-				for(int a = 0; a < curWeightLayer.length; a++)
+				for(int b = 0; b < curWeightLayer[0].length; b++)
 				{
-					for(int b = 0; b < curWeightLayer[0].length; b++)
-					{
-						myList.add(curWeightLayer[a][b]);
-					}
+					myList.add(curWeightLayer[a][b]);
 				}
 			}
-			
-			Double[] unraveledList = new Double[myList.size()];
-			unraveledList = myList.toArray(unraveledList);
-			
-			return unraveledList;
 		}
+		
+		Double[] unraveledList = new Double[myList.size()];
+		unraveledList = myList.toArray(unraveledList);
+		
+		return unraveledList;
+	}
 	
 	
 	//Helper method.  Takes in a 1D matrix and converts it into the proper 5D matrix
-	public void reravel(double[] dArray, ArrayList<Double[][][][]> reravelItem)
+	public void reravel(double[] dArray, ArrayList<Double[][][][]> reravelItem, ArrayList<Double[][]> reravelItemNeuralNet)
 	{
 		int dPosition = 0;
 		for(int i = 0; i < reravelItem.size(); i++)
@@ -557,6 +724,71 @@ public class ConvNeuralNet {
 			}
 			reravelItem.set(i, curWeightLayer);
 		}
+		
+		for(int i = 0; i < reravelItemNeuralNet.size(); i++)
+		{
+			Double[][] curWeightLayer = reravelItemNeuralNet.get(i);
+			for(int x = 0; x < curWeightLayer.length; x++)
+			{
+				for(int y = 0; y < curWeightLayer[0].length; y++)
+				{
+					curWeightLayer[x][y] = dArray[dPosition];
+					dPosition++;
+				}
+			}
+			reravelItemNeuralNet.set(i, curWeightLayer);
+		}
+		
+		
 	}
+	
+	//Calculates how wrong our current state is
+	public double calculateCostFunction(Double[][] Y, Double[][] yHat)
+	{
+		//Calculate weight complexity
+		//double complexityCost = this.calculateWeightComplexity();
+		
+		//Calculate the yHat - Y, square it, then half it (1/2) (y-yHat)^2
+		Double[][] costResultMatrix = NeuralMatrix.subtract(Y, yHat);
+		costResultMatrix = NeuralMatrix.multiplyVector(costResultMatrix, costResultMatrix);
+		double answerCost = NeuralMatrix.sumVector(costResultMatrix)/2;
+		
+		//Sum our MatrixCost and our weightCost
+		//this.cost = answerCost + complexityCost;
+		this.cost = answerCost;
+		
+		return this.cost;
+	}
+	
+	
+	public void calculateCostFunctionPrimes()
+	{
+		double epsilon = .00000001;
+
+		double[] unraveled = this.unravel(networkFilters, nn.weights);
+		double[] gradient = new double[unraveled.length];
+		
+		//We come into this method with varying weights from the original set sometimes.  Therefore, calculate the cost and store it.
+		calculateForwardProp();
+		this.calculateCostFunction(outputData, yHat);
+		double origCost = this.cost;
+
+		System.out.println("unraveled length: " + unraveled.length);
+		for(int i = 0; i < unraveled.length; i++)
+		{
+			unraveled[i] = unraveled[i] + epsilon;
+			this.reravel(unraveled, this.networkFilters, nn.weights);
+			calculateForwardProp();
+			this.calculateCostFunction(outputData, yHat);
+			double pCost = this.cost;
+
+			gradient[i] = (pCost - origCost) / (epsilon);
+
+			unraveled[i] = unraveled[i] - epsilon;
+			this.reravel(unraveled, this.networkFilters, nn.weights);
+		}
+		this.reravel(gradient, this.networkGradients, nn.gradients);
+	}
+	
 	
 }

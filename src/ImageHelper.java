@@ -57,6 +57,41 @@ public class ImageHelper {
 		return returnArray;
 	}
 	
+	
+	public Double[][][] extractBytesFullChannels (String ImageName) 
+	{
+		File imgPath = new File(directoryPath + ImageName);
+		BufferedImage bufferedImage = null;
+		try {
+			bufferedImage = ImageIO.read(imgPath);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		int[][] result = null ;
+		
+		for (int i = 0; i < 10; i++) {
+			result = convertTo2DWithoutUsingGetRGB(bufferedImage);
+		}
+		
+		Double[][] imageResult = new Double[result.length][result[0].length];
+		for(int i = 0; i < result.length; i++)
+		{
+			for(int j = 0; j < result[0].length; j++)
+			{
+				imageResult[i][j] = result[i][j] + 0.0;
+			}
+		}
+		
+		Double[][][] returnArray = {
+				imageResult,
+				imageResult,
+				imageResult
+		};
+		 
+		return returnArray;
+	}
+	
 	  private int[][] convertTo2DWithoutUsingGetRGB(BufferedImage image) {
 
 	      final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();

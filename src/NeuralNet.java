@@ -35,71 +35,82 @@ public class NeuralNet {
 	public static void main(String[] args)
 	{
 		System.out.println("Begin matrix initialization...");
-		int[] networkDescription = {729,12,6,3,1};
+//		int[] networkDescription = {729,12,6,3,1};
+		int[] networkDescription = {27,20,1};
 		
 		ImageHelper helper = new ImageHelper("data\\");
 
 		Double[][] inputData = {
-				helper.extractBytes("eight1.png"),
-				helper.extractBytes("eight2.png"),
-				helper.extractBytes("one1.png"),
-				helper.extractBytes("five1.png"),
-				helper.extractBytes("eight3.png"),
-				helper.extractBytes("eight5.png"),
-				helper.extractBytes("eight6.png"),
-				helper.extractBytes("nine1.png"),
-				helper.extractBytes("zero1.png"),
-				helper.extractBytes("eight7.png"),
-				helper.extractBytes("eight8.png"),
-				helper.extractBytes("eight10.png"),
-				helper.extractBytes("eight11.png"),
-				helper.extractBytes("eight12.png"),
-				helper.extractBytes("eight14.png"),
-				helper.extractBytes("four2.png"),
-				helper.extractBytes("four3.png"),
-				helper.extractBytes("eight4.png"),
-				helper.extractBytes("four1.png"),
-				helper.extractBytes("black.png"),
-				helper.extractBytes("six2.png"),
-				helper.extractBytes("six3.png"),
-				helper.extractBytes("six4.png"),
-				helper.extractBytes("six5.png")
+				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0},
+				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0}
 		};
+		
 		Double[][] outputData = {
 				{1.},
-				{1.},
-				{0.},
-				{0.},
-				{1.},
-				{1.},
-				{1.},
-				{0.},
-				{0.},
-				{1.},
-				{1.},
-				{1.},
-				{1.},
-				{1.},
-				{1.},
-				{0.},
-				{0.},
-				{1.},
-				{0.},
-				{0.},
-				{0.},
-				{0.},
-				{0.},
-				{0.}
+				{1.}
 		};
 		
-		Double[][] testData = {
-				helper.extractBytes("eight16.png"),
-				helper.extractBytes("six1.png")
-		};
+//		Double[][] inputData = {
+//				helper.extractBytes("eight1.png"),
+//				helper.extractBytes("eight2.png"),
+//				helper.extractBytes("one1.png"),
+//				helper.extractBytes("five1.png"),
+//				helper.extractBytes("eight3.png"),
+//				helper.extractBytes("eight5.png"),
+//				helper.extractBytes("eight6.png"),
+//				helper.extractBytes("nine1.png"),
+//				helper.extractBytes("zero1.png"),
+//				helper.extractBytes("eight7.png"),
+//				helper.extractBytes("eight8.png"),
+//				helper.extractBytes("eight10.png"),
+//				helper.extractBytes("eight11.png"),
+//				helper.extractBytes("eight12.png"),
+//				helper.extractBytes("eight14.png"),
+//				helper.extractBytes("four2.png"),
+//				helper.extractBytes("four3.png"),
+//				helper.extractBytes("eight4.png"),
+//				helper.extractBytes("four1.png"),
+//				helper.extractBytes("black.png"),
+//				helper.extractBytes("six2.png"),
+//				helper.extractBytes("six3.png"),
+//				helper.extractBytes("six4.png"),
+//				helper.extractBytes("six5.png")
+//		};
+//		Double[][] outputData = {
+//				{1.},
+//				{1.},
+//				{0.},
+//				{0.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{0.},
+//				{0.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{1.},
+//				{0.},
+//				{0.},
+//				{1.},
+//				{0.},
+//				{0.},
+//				{0.},
+//				{0.},
+//				{0.},
+//				{0.}
+//		};
+		
+//		Double[][] testData = {
+//				helper.extractBytes("eight16.png"),
+//				helper.extractBytes("six1.png")
+//		};
 		
 		//Initialize Network and normalize Testing data (training data is normalized in the initialization right now
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_729.11.7.5.1.txt", "2_729.11.7.5.1.txt");
-		testData = NN.normalizeMatrix(testData);
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "26.20.1.txt");
+//		testData = NN.normalizeMatrix(testData);
 		
 		//Begin first pass of the neural network
 		NN.calculateForwardProp();
@@ -135,11 +146,13 @@ public class NeuralNet {
 		//Back propagation complete.  Now saving file and calculating results of test data
 		System.out.println("Saving Weights...");
 		NN.saveWeights();
-		NN.inputData = testData;
-		System.out.println("Calculating our guess...");
-		NN.calculateForwardProp();
-		System.out.println("******");
-		NeuralMatrix.printMatrix(NN.yHat);
+		
+		/* Saving the output data */
+//		NN.inputData = testData;
+//		System.out.println("Calculating our guess...");
+//		NN.calculateForwardProp();
+//		System.out.println("******");
+//		NeuralMatrix.printMatrix(NN.yHat);
 	}
 	
 	public NeuralNet()
@@ -151,20 +164,14 @@ public class NeuralNet {
 		iflag[0] = 0;
 		icall = 0;
 	}
-
-	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData)
+	
+	public NeuralNet(int[] networkDescription)
 	{
 		//Setup for LBFGS algorithm
 		this();
 		
-		//Begin initialization of network
-		this.inputData = inputData;
-		this.outputData = outputData;
+		//Begin Initialization of network
 		this.networkDescription = networkDescription;
-		
-
-		//Normalize Weights
-		normalizeMatrix(this.inputData);
 		
 		//Initialize Weights
 		initializeValuesInMatrix(true, weights);
@@ -177,6 +184,21 @@ public class NeuralNet {
 			numberOfVariables += (networkDescription[i] * networkDescription[i+1]);
 		}
 		diag = new double [ numberOfVariables ];
+		
+	}
+
+	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData)
+	{
+		//Call lower constructor
+		this(networkDescription);
+		
+		//Begin initialization of network
+		this.inputData = inputData;
+		this.outputData = outputData;
+		
+		//Normalize Weights
+		normalizeMatrix(this.inputData);
+		
 	}
 	
 	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData, String saveFile)
@@ -270,7 +292,10 @@ public class NeuralNet {
 		{
 			for(int j = 0; j < normalizingMatrix[i].length; j++)
 			{
-				normalizingMatrix[i][j] = normalizingMatrix[i][j]/normalizationFactors[j];
+				if(normalizationFactors[j] == 0)
+					normalizingMatrix[i][j] = 0.0;
+				else
+					normalizingMatrix[i][j] = normalizingMatrix[i][j]/normalizationFactors[j];
 			}
 		}
 		
