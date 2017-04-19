@@ -1,3 +1,19 @@
+//Notes: 
+//1. Something is probably wrong with the normalization method of the neural network.
+//    We probably don't want to normalize each time for an image.  We'll likely have 0
+//    values in our input due to the ReLu function, so it might be normalized on time,
+//    but not another time.  Or, each time we change the input as well, it might
+//    mess up the inputs if they aren't normalized either...It goes against the basic
+//    neural net architecture, but I think we may want to hide it or normalize it to 
+//    255 always (largest expected pixel value)
+//2. Thoughts?
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 public class ConvNeuralNet {
@@ -9,7 +25,7 @@ public class ConvNeuralNet {
 	int numberOfVariables=0;
 	String filePath = "C:\\NeuralNet\\";
 	String loadFile = "test.txt";
-	String saveFile = "test.txt";
+	String saveFile = "test2.txt";
 	
 	//Network Descriptors
 	Double[][][][] inputData;
@@ -37,14 +53,16 @@ public class ConvNeuralNet {
 		//convNetworkDescription[x][2] = stride
 		//convNetworkDescription[x][3] = padding
 		int[][] cnnNetDesc = {
-			{3, 3, 2, 1},
+			{5, 3, 2, 1},
 			{3, 3, 1, 1},
+			{3, 3, 1, 1},
+			{3, 3, 2, 1},
 			{3, 3, 1, 1},
 			{3, 3, 2, 1}
 		};
 		//First parameter is calculated at another time
 		int[] netDesc = {
-			27, 5, 1
+			48, 30, 1
 		};
 		
 		
@@ -55,93 +73,93 @@ public class ConvNeuralNet {
 		//myImage[][x][][] = number of input channels (depth dimension of your image)
 		//myImage[][][x][] = length dimension of your image
 		//myimage[][][][x] = width dimension of your image
-		Double[][][][] myImages = {
-			//Image 1 with 3 color channels
-			{
-				{
-					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-				},
-				{
-					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-				},
-				{
-					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-				}
-			},
-			//Image 2 with 3 color channels
-			{
-				{
-					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-				},
-				{
-					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-				},
-				{
-					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-				}
-			}
-		};
+//		Double[][][][] myImages = {
+//			//Image 1 with 3 color channels
+//			{
+//				{
+//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
+//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
+//				},
+//				{
+//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
+//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
+//				},
+//				{
+//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
+//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
+//				}
+//			},
+//			//Image 2 with 3 color channels
+//			{
+//				{
+//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
+//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
+//				},
+//				{
+//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
+//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
+//				},
+//				{
+//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
+//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
+//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
+//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
+//				}
+//			}
+//		};
 		
 		ImageHelper helper = new ImageHelper("data\\");
 		
-//		Double[][][][] myImages = {
-//				helper.extractBytesFullChannels("eight1.png"),
-//				helper.extractBytesFullChannels("eight2.png"),
-//				helper.extractBytesFullChannels("one1.png")
-//		};
+		Double[][][][] myImages = {
+				helper.extractBytesFullChannels("eight1.png"),
+				helper.extractBytesFullChannels("eight2.png"),
+				helper.extractBytesFullChannels("one1.png")
+		};
 		
 		Double[][] outputData = {
 				{1.},
-				{1.}
-//				{0.}
+				{1.},
+				{0.}
 		};
 		
 		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc, myImages, outputData);
@@ -204,6 +222,7 @@ public class ConvNeuralNet {
 		//consists of multiple filters) I want to apply at the first convolution level
 		//myFilter[x][][][] = the number of filter sets I have at one layer in my CNN
 		//myFilter[][x][][] = the depth of the filter set at a particular layer
+		//						the depth of a filter set corresponds to the number of filters at the previous layer
 		//myFilter[][][x][] = the length of a filter
 		//myFilter[][][][x] = the widht of a filter
 //		Double[][][][] myFilter = {
@@ -272,9 +291,13 @@ public class ConvNeuralNet {
 		
 		
 		
+		cnn.saveWeights();
 		
 		
 		
+		
+		
+		/*
 		cnn.calculateForwardProp();
 		
 		
@@ -327,7 +350,7 @@ public class ConvNeuralNet {
 			e.printStackTrace();
 			System.out.println("error");
 		}
-		
+		*/
 		//Back propagation complete. 
 		
 		
@@ -376,6 +399,101 @@ public class ConvNeuralNet {
 		this(networkDescription, convNetworkDescription);
 		this.inputData = inputData;
 		this.outputData = outputData;
+		
+		File weightInitiatorPath = new File(filePath + loadFile);
+		
+		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
+			StringBuilder sb = new StringBuilder();
+			
+			String line;
+			for(int i = 0; i < convNetworkDescription.length; i++)
+			{
+				line = br.readLine();
+				String[] splitter = line.split(" ");
+			    networkDescription = new int[splitter.length];
+			    for(int j = 0; j < splitter.length; j++)
+			    {
+			    	convNetworkDescription[i][j] = Integer.parseInt(splitter[j]);
+			    }
+				
+			}
+			
+		    
+		    line = br.readLine();
+		    line = br.readLine();
+		    int counter = 0;
+		    while (!line.equals("EOF") && line != null) {
+		    	//First need to get the number of filter sets at this layer
+		    	int numOfFilterSets = convNetworkDescription[counter][1];
+		    	
+		    	//Next get the depth of the filter sets (3 at layer 0, or previous layers filters
+		    	int depthOfFilterSets = 3;
+		    	if(counter != 0)
+		    	{
+		    		depthOfFilterSets = convNetworkDescription[counter-1][1];
+		    	}
+		    	
+		    	//Finally get the dimension of your filter
+		    	int filterDimension = convNetworkDescription[counter][0];
+		    	
+		    	//Construct this layer's temp weights
+		    	Double[][][][] tempWeights = new Double[numOfFilterSets][depthOfFilterSets][filterDimension][filterDimension];
+
+
+		    	//Need to do something complicated
+		    	int numberOfFilterSetsReached = 0;
+		    	int numberOfFiltersInSetReached = 0;
+		    	int indexOfFilterLength = 0;
+		    	while (
+		    			!line.equals("EOF") && 
+		    			(!line.equals("----") && numberOfFilterSetsReached != numOfFilterSets  && numberOfFiltersInSetReached != depthOfFilterSets) 
+		    			&& line != null) 
+		    	{
+		    		if(line == "----")
+		    		{
+		    			if(numberOfFiltersInSetReached == depthOfFilterSets)
+		    			{
+		    				numberOfFiltersInSetReached = 0;
+		    				indexOfFilterLength = 0;
+		    				numberOfFilterSetsReached++;
+		    				counter++;
+		    			}
+		    			else
+		    			{
+		    				indexOfFilterLength = 0;
+		    				numberOfFiltersInSetReached++;
+		    			}
+		    		}
+		    		else
+		    		{
+		    			String[] matrixSplitter = line.split(" ");
+					    
+					    for(int i = 0; i < matrixSplitter.length; i++)
+					    {
+					    	tempWeights[numberOfFiltersInSetReached][numberOfFilterSetsReached][indexOfFilterLength][i] = Double.parseDouble(matrixSplitter[i]);
+					    }
+					    
+					    indexOfFilterLength++;				        
+		    		}
+		    		
+		    		
+		    		line = br.readLine();
+			        if(!line.equals("----") && numberOfFilterSetsReached != numOfFilterSets  && numberOfFiltersInSetReached != depthOfFilterSets)
+			        {
+			        	networkFilters.add(tempWeights);
+			        }
+
+		    	}
+//		    	counter++;
+		        line = br.readLine();
+		    }
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
 	
 	public void calculateForwardProp()
@@ -391,11 +509,11 @@ public class ConvNeuralNet {
 			//z = a.convolve(filter)
 			for(int j = 0; j < a.length; j++)
 			{
-				//Motherfucker this was 0/i too....Has to be i not 0
+				//This was 0/i too....Has to be i not 0
 				for(int k = 0; k < networkFilters.get(i).length; k++)
 				{
 					//cnn.convolution returns a 2D matrix, hence we store it in our result
-					//Fuck is it i or 0 here....It has to be i, I think...if its 0, I think we 
+					//Oops...Is it i or 0 here....It has to be i, I think...if its 0, I think we 
 					//apply the same initial filter over the entire set if it is 0, and therefore, we want
 					//to make sure it is .get(i) to make sure we use every variable...but why 
 					//didn't it break everywhere else, either one solves the problem
@@ -790,5 +908,60 @@ public class ConvNeuralNet {
 		this.reravel(gradient, this.networkGradients, nn.gradients);
 	}
 	
+	//Save the weights to the proper save file
+	public void saveWeights()
+	{
+		try(  PrintWriter out = new PrintWriter( this.filePath + this.saveFile )  ){
+			ArrayList<String> convNetworkDescriptionString = new ArrayList<String>();
+			
+			for(int i = 0; i < convNetworkDescription.length; i++)
+			{
+				String convNetworkLayer = "";
+				for(int j = 0; j < convNetworkDescription[0].length; j++)
+				{
+					convNetworkLayer += convNetworkDescription[i][j] + " ";
+				}
+				convNetworkDescriptionString.add(convNetworkLayer);
+			}
+			
+			ArrayList<String> weightsString = new ArrayList<String>();
+			for(int i = 0; i < networkFilters.size(); i++)
+			{
+				Double[][][][] d = networkFilters.get(i);
+				for(int a = 0; a < d.length; a++)
+				{
+					for(int b = 0; b < d[a].length; b++)
+					{
+						for(int c = 0; c < d[a][b].length; c++)
+						{
+							Double[] dx = d[a][b][c];
+							String curWeightLine = "";
+							for(int y = 0; y < dx.length; y++)
+							{
+								curWeightLine += dx[y] + " ";
+							}
+							weightsString.add(curWeightLine);
+						}
+						weightsString.add("----");
+					}
+				}
+			}
+			
+			for(String s : convNetworkDescriptionString)
+			{
+				out.println(s);
+			}
+			out.println("----");
+		    for(String s : weightsString)
+		    {
+		    	out.println(s);
+		    }
+		    out.println("EOF");
+		    System.out.println("File save completed");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
 	
 }
