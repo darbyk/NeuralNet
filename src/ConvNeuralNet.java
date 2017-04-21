@@ -115,16 +115,58 @@ public class ConvNeuralNet {
 		Double[][][][] myImages = {
 				helper.extractBytesFullChannels("eight1.png"),
 				helper.extractBytesFullChannels("eight2.png"),
-				helper.extractBytesFullChannels("one1.png")
+				helper.extractBytesFullChannels("one1.png"),
+				helper.extractBytesFullChannels("five1.png"),
+				helper.extractBytesFullChannels("eight3.png"),
+				helper.extractBytesFullChannels("eight5.png"),
+				helper.extractBytesFullChannels("eight6.png"),
+				helper.extractBytesFullChannels("nine1.png"),
+				helper.extractBytesFullChannels("zero1.png"),
+				helper.extractBytesFullChannels("eight7.png"),
+				helper.extractBytesFullChannels("eight8.png"),
+				helper.extractBytesFullChannels("eight10.png"),
+				helper.extractBytesFullChannels("eight11.png"),
+				helper.extractBytesFullChannels("eight12.png"),
+				helper.extractBytesFullChannels("eight14.png"),
+				helper.extractBytesFullChannels("four2.png"),
+				helper.extractBytesFullChannels("four3.png"),
+				helper.extractBytesFullChannels("eight4.png"),
+				helper.extractBytesFullChannels("four1.png"),
+				helper.extractBytesFullChannels("black.png"),
+				helper.extractBytesFullChannels("six2.png"),
+				helper.extractBytesFullChannels("six3.png"),
+				helper.extractBytesFullChannels("six4.png"),
+				helper.extractBytesFullChannels("six5.png")
 		};
 		
 		Double[][] outputData = {
 				{1.},
 				{1.},
+				{0.},
+				{0.},
+				{1.},
+				{1.},
+				{1.},
+				{0.},
+				{0.},
+				{1.},
+				{1.},
+				{1.},
+				{1.},
+				{1.},
+				{1.},
+				{0.},
+				{0.},
+				{1.},
+				{0.},
+				{0.},
+				{0.},
+				{0.},
+				{0.},
 				{0.}
 		};
 		
-		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc, myImages, outputData, "CNN_4_20_test1.txt", "CNN_4_20_test1.txt");
+		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc, myImages, outputData, "CNN_4_20_test3.txt");
 		
 		System.out.println(cnn.numberOfVariables);
 				
@@ -134,6 +176,23 @@ public class ConvNeuralNet {
 		
 		//Saving weights
 		cnn.saveWeights();
+		
+		
+		//Test Result
+		Double[][][][] testData = {
+				helper.extractBytesFullChannels("eight16.png"),
+				helper.extractBytesFullChannels("six1.png")
+		};
+		Double[][] outputEmptySet = {
+				{0.},
+				{0.}
+		};
+		cnn.inputData = testData;
+		cnn.outputData = outputEmptySet;
+		cnn.calculateForwardProp();
+		NeuralMatrix.printMatrix(cnn.yHat);
+		
+		
 		
 	}
 	
@@ -243,7 +302,7 @@ public class ConvNeuralNet {
 
 			do
 			{
-				LBFGS.lbfgs((numberOfVariables + nn.numberOfVariables), 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, 1.0e-4, 1.0e-17, iflag);
+				LBFGS.lbfgs((numberOfVariables + nn.numberOfVariables), 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, 1.0e-2, 1.0e-17, iflag);
 				reravel(unraveledWeights, networkFilters, nn.weights);
 				calculateForwardProp();
 				calculateCostFunctionPrimes();
