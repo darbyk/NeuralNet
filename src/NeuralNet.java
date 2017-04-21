@@ -112,6 +112,8 @@ public class NeuralNet {
 		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "26.20.1.txt");
 //		testData = NN.normalizeMatrix(testData);
 		
+//		NN.trainDataset();
+		
 		//Begin first pass of the neural network
 		NN.calculateForwardProp();
 		double cost = NN.calculateCostFunction(NN.outputData, NN.yHat);
@@ -153,6 +155,42 @@ public class NeuralNet {
 //		NN.calculateForwardProp();
 //		System.out.println("******");
 //		NeuralMatrix.printMatrix(NN.yHat);
+	}
+	
+	
+	//Whats wrong with this?
+	public void trainDataset()
+	{
+		//Begin first pass of the neural network
+		calculateForwardProp();
+		double cost = calculateCostFunction(outputData, yHat);
+		calculateCostFunctionPrimes();
+		NeuralMatrix.printMatrix(yHat);
+		
+		//Save some temp variables and begin unraveling the weights for back propagation
+		double cost2 = cost;
+		double[] unraveledWeights = unravel(weights);
+		double[] unraveledGradient = unravel(gradients);
+		System.out.println("Beginning Back propogation...");
+		try {
+
+			do
+			{
+				LBFGS.lbfgs(numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, 1.0e-4, 1.0e-17, iflag);
+				reravel(unraveledWeights, weights);
+				calculateForwardProp();
+				calculateCostFunctionPrimes();
+				calculateCostFunction(outputData, yHat);
+				cost2 = cost;
+				unraveledGradient = unravel(gradients);
+				NeuralMatrix.printMatrix(yHat);
+		
+			} while(iflag[0] != 0);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("error");
+		}
 	}
 	
 	public NeuralNet()
@@ -209,7 +247,7 @@ public class NeuralNet {
 		
 	}
 	
-	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData, String loadFile, String saveFile)
+	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData, String saveFile, String loadFile)
 	{
 		
 		//Setup for LBFGS algorithm and initialization of network
@@ -218,60 +256,16 @@ public class NeuralNet {
 		//Initialize save and load file locations
 		this.loadFile = loadFile;
 		this.saveFile = saveFile;
-		File weightInitiatorPath = new File(filePath + loadFile);
+		weights = new ArrayList<Double[][]>();
 		
-		//Read from file and initialize weights
-		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
-			StringBuilder sb = new StringBuilder();
-		    String line = br.readLine();
-		    String[] splitter = line.split(" ");
-		    networkDescription = new int[splitter.length];
-		    for(int i = 0; i < splitter.length; i++)
-		    {
-		    	networkDescription[i] = Integer.parseInt(splitter[i]);
-		    }
-		    line = br.readLine();
-		    line = br.readLine();
-		    int counter = 0;
-		    int seperatorsFound = 0;
-		    while (!line.equals("EOF") && line != null) {
-		    	
-		    	Double[][] tempWeights = new Double[networkDescription[seperatorsFound]][networkDescription[seperatorsFound+1]];
-		    	System.out.println("Matrix Initialized: " + tempWeights.length + " x " + tempWeights[0].length);
-		    	
-		    	while (!line.equals("EOF") && !line.equals("----") && line != null) {
-				    String[] matrixSplitter = line.split(" ");
-				    
-				    for(int i = 0; i < matrixSplitter.length; i++)
-				    {
-				    	tempWeights[counter][i] = Double.parseDouble(matrixSplitter[i]);
-				    }
-				    counter++;
-					
-
-			        line = br.readLine();
-			        if(line.equals("----"))
-			        {
-			        	seperatorsFound++;
-			        	weights.add(tempWeights);
-			        }
-
-		    	}
-		    	counter=0;
-		        line = br.readLine();
-		    }
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		loadFile();
 	}
 	
 	
 	//Refactor this. Instead of saving the normalizationFactors the first time, it should be broken into 2 methods.
 	public Double[][] normalizeMatrix(Double[][] normalizingMatrix)
 	{
-		System.out.println("Normalizing Data...");
+//		System.out.println("Normalizing Data...");
 		//Find Max Value. If already found, then skip
 		double[] maxOfColumn;
 		if(normalizationFactors == null)
@@ -493,6 +487,58 @@ public class NeuralNet {
 		    out.println("EOF");
 		    System.out.println("File save completed");
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	public void loadFile()
+	{
+		weights = new ArrayList<Double[][]>();
+		File weightInitiatorPath = new File(filePath + loadFile);
+		
+		//Read from file and initialize weights
+		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
+			StringBuilder sb = new StringBuilder();
+		    String line = br.readLine();
+		    String[] splitter = line.split(" ");
+		    networkDescription = new int[splitter.length];
+		    for(int i = 0; i < splitter.length; i++)
+		    {
+		    	networkDescription[i] = Integer.parseInt(splitter[i]);
+		    }
+		    line = br.readLine();
+		    line = br.readLine();
+		    int counter = 0;
+		    int seperatorsFound = 0;
+		    while (!line.equals("EOF") && line != null) {
+		    	
+		    	Double[][] tempWeights = new Double[networkDescription[seperatorsFound]][networkDescription[seperatorsFound+1]];
+		    	System.out.println("Matrix Initialized: " + tempWeights.length + " x " + tempWeights[0].length);
+		    	
+		    	while (!line.equals("EOF") && !line.equals("----") && line != null) {
+				    String[] matrixSplitter = line.split(" ");
+				    
+				    for(int i = 0; i < matrixSplitter.length; i++)
+				    {
+				    	tempWeights[counter][i] = Double.parseDouble(matrixSplitter[i]);
+				    }
+				    counter++;
+					
+
+			        line = br.readLine();
+			        if(line.equals("----"))
+			        {
+			        	seperatorsFound++;
+			        	weights.add(tempWeights);
+			        }
+
+		    	}
+		    	counter=0;
+		        line = br.readLine();
+		    }
+		    br.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

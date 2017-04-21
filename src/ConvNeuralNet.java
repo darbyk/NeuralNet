@@ -6,7 +6,44 @@
 //    mess up the inputs if they aren't normalized either...It goes against the basic
 //    neural net architecture, but I think we may want to hide it or normalize it to 
 //    255 always (largest expected pixel value)
-//2. Thoughts?
+//2. Need to add a weight complexity cost into the network so that the network
+//    isn't overfit. 
+//3.
+//		Represents my fitler set (I have multiple filter sets, where each filter set 
+//		consists of multiple filters) I want to apply at the first convolution level
+//		myFilter[x][][][] = the number of filter sets I have at one layer in my CNN
+//		myFilter[][x][][] = the depth of the filter set at a particular layer
+//							the depth of a filter set corresponds to the number of filters at the previous layer
+//		myFilter[][][x][] = the length of a filter
+//		myFilter[][][][x] = the widht of a filter
+//		Double[][][][] myFilter = {
+//			//Filter set 1 that works across 2 color channels
+//			{
+//					{
+//						{1.,1.,1.},
+//						{1.,1.,1.},
+//						{1.,1.,1.}
+//					},
+//					{
+//						{2.,2.,2.},
+//						{2.,2.,2.},
+//						{2.,2.,2.}
+//					}
+//			},
+//			//Filter set 2 that works across 2 color channels
+//			{
+//				{
+//					{1.,1.,1.},
+//					{1.,1.,1.},
+//					{1.,1.,1.}
+//				},
+//				{
+//					{2.,2.,2.},
+//					{2.,2.,2.},
+//					{2.,2.,2.}
+//				}
+//			}
+//		};
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -60,7 +97,7 @@ public class ConvNeuralNet {
 			{3, 3, 1, 1},
 			{3, 3, 2, 1}
 		};
-		//First parameter is calculated at another time
+		//This needs to be known at compile time (though could likely calculate on-the-fly
 		int[] netDesc = {
 			48, 30, 1
 		};
@@ -69,85 +106,10 @@ public class ConvNeuralNet {
 		//Starting Unit Tests;
 		//Represents my multiple images, across multiple color channels
 		//This is a 4D array
-		//myImage[x][][][] = number of input images
-		//myImage[][x][][] = number of input channels (depth dimension of your image)
-		//myImage[][][x][] = length dimension of your image
-		//myimage[][][][x] = width dimension of your image
-//		Double[][][][] myImages = {
-//			//Image 1 with 3 color channels
-//			{
-//				{
-//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-//				},
-//				{
-//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-//				},
-//				{
-//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-//				}
-//			},
-//			//Image 2 with 3 color channels
-//			{
-//				{
-//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-//				},
-//				{
-//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-//				},
-//				{
-//					{0.,0.,2.,1.,2.,1.,2.,3.,0.},
-//					{1.,2.,0.,2.,1.,0.,3.,2.,1.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{0.,2.,0.,1.,2.,0.,1.,2.,0.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.},
-//					{2.,2.,2.,1.,1.,0.,0.,1.,2.},
-//					{0.,2.,0.,0.,1.,0.,2.,1.,2.}
-//				}
-//			}
-//		};
-		
+		//myImages[x][][][] = number of input images
+		//myImages[][x][][] = number of input channels (depth dimension of your image)
+		//myImages[][][x][] = length dimension of your image
+		//myimages[][][][x] = width dimension of your image
 		ImageHelper helper = new ImageHelper("data\\");
 		
 		Double[][][][] myImages = {
@@ -162,198 +124,16 @@ public class ConvNeuralNet {
 				{0.}
 		};
 		
-		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc, myImages, outputData);
+		ConvNeuralNet cnn = new ConvNeuralNet(netDesc, cnnNetDesc, myImages, outputData, "CNN_4_20_test1.txt", "CNN_4_20_test1.txt");
 		
 		System.out.println(cnn.numberOfVariables);
+				
 		
+		//Training dataset...
+		cnn.trainDataset();
 		
-//		cnn.inputData = myImages;
-		
-		/*
-		ArrayList<Double[][][][]> temp = new ArrayList<Double[][][][]>();
-		for(int a = 0; a  < 2; a ++)
-		{
-			Double[][][][] layer = new Double[2][2][2][2];
-			for(int b = 0; b < 2; b++)
-			{
-				for(int c = 0; c < 2; c++)
-				{
-					for(int d = 0; d < 2; d++)
-					{
-						for(int e = 0; e < 2; e++)
-						{
-							layer[b][c][d][e] = e + a*16 + b*8 + c*4 + d*2 + 0.0;
-						}
-					}
-				}
-			}
-			temp.add(layer);
-		}
-		
-		
-		ArrayList<Double[][]> tempSmall = new ArrayList<Double[][]>();
-		for(int a = 0; a  < 2; a ++)
-		{
-			Double[][] layer = new Double[2][2];
-			for(int b = 0; b < 2; b++)
-			{
-				for(int c = 0; c < 2; c++)
-				{
-					layer[b][c] = a*4 + b*2 + c + 0.0;
-				}
-			}
-			tempSmall.add(layer);
-		}
-		
-		System.out.println("Testing");
-		
-		double[] unravelTest = cnn.unravel(temp, tempSmall);
-		
-		unravelTest[30] = unravelTest[30] + 1;
-		unravelTest[35] = unravelTest[35] + 1;
-		
-		cnn.reravel(unravelTest, temp, tempSmall);
-		
-		System.out.println("Testing");
-		
-		*/
-		
-		//Represents my fitler set (I have multiple filter sets, where each filter set 
-		//consists of multiple filters) I want to apply at the first convolution level
-		//myFilter[x][][][] = the number of filter sets I have at one layer in my CNN
-		//myFilter[][x][][] = the depth of the filter set at a particular layer
-		//						the depth of a filter set corresponds to the number of filters at the previous layer
-		//myFilter[][][x][] = the length of a filter
-		//myFilter[][][][x] = the widht of a filter
-//		Double[][][][] myFilter = {
-//			//Filter set 1 that works across 2 color channels
-//			{
-//					{
-//						{1.,1.,1.},
-//						{1.,1.,1.},
-//						{1.,1.,1.}
-//					},
-//					{
-//						{2.,2.,2.},
-//						{2.,2.,2.},
-//						{2.,2.,2.}
-//					}
-//			},
-//			//Filter set 2 that works across 2 color channels
-//			{
-//				{
-//					{1.,1.,1.},
-//					{1.,1.,1.},
-//					{1.,1.,1.}
-//				},
-//				{
-//					{2.,2.,2.},
-//					{2.,2.,2.},
-//					{2.,2.,2.}
-//				}
-//			}
-//		};
-		
-		//Want to create a CNN that has 2 convolution layers.  
-		//Just adding the same filter again for now to see how this can be done
-		//The depth of my networkFilters really determines the iterations I'll go.
-		//Makes more sense to have a network description though.  
-		//Lets break it into 2, one where we hold the CNN and one for the NN? Yes.
-//		cnn.networkFilters.add(myFilter);
-//		cnn.networkFilters.add(myFilter);
-		
-		//The stride we're applying over our image.  I'll need to add some validation maybe?
-		//Because its important that I don't stride out of bounds 
-		int stride = 1;
-		
-		//4D array is: number of images x number of filter sets x output length x output width
-		//result[x][][][] = the result of the convolution of each image, 
-		//       so result[1][][][] holds the convolution result for image 1 - this mimicks bulk processing
-		//result[][x][][] = the depth dimension of my convolution volume output for a given image
-		//result[][][x][] = the length dimension of my convolution volume output
-		//result[][][][x] = the width dimension of my convolution volume output
-		int outputImageLength = (int) Math.ceil(myImages[0][0].length/(double)stride);
-		int outputImageWidth = (int) Math.ceil(myImages[0][0][0].length/(double)stride);
-		Double[][][][] result = new Double[myImages.length][cnn.networkFilters.get(0).length][outputImageLength][outputImageWidth];
-		
-		//Applies my filter sets across each image
-		//But now I need to store the result in a 4D array
-		//Repeat this method over and over again (this is kinda my forward prop
-//		for(int i = 0; i < myImages.length; i++)
-//		{
-//			for(int j = 0; j < cnn.networkFilters.get(0).length; j++)
-//			{
-//				//cnn.convolution returns a 2D matrix, hence we store it in our result
-//				result[i][j] = cnn.convolution(myImages[i], cnn.networkFilters.get(0)[j], stride);
-//			}
-//			
-//		}
-		
-		
-		
+		//Saving weights
 		cnn.saveWeights();
-		
-		
-		
-		
-		
-		/*
-		cnn.calculateForwardProp();
-		
-		
-		cnn.calculateCostFunctionPrimes();
-		System.out.println("******************");
-		System.out.println("Calculating Primes");		
-		
-		for(int i = 0; i < cnn.networkGradients.size(); i++)
-		{
-			for(int j = 0; j < cnn.networkGradients.get(i).length; j++)
-			{
-				for(int k = 0; k < cnn.networkGradients.get(i)[j].length; k++)
-				{
-					NeuralMatrix.printMatrix(cnn.networkGradients.get(i)[j][k]);
-					System.out.println("--New Matrix--");
-				}
-			}
-			System.out.println("*");
-		}
-		
-		System.out.println("Printing NN Gradients");
-		for(int i = 0; i < cnn.nn.networkDescription.length-1; i++)
-		{
-			NeuralMatrix.printMatrix(cnn.nn.gradients.get(i));
-			System.out.println("*");
-		}
-		
-		
-		//Save some temp variables and begin unraveling the weights for back propagation
-		double cost2 = cnn.cost;
-		double[] unraveledWeights = cnn.unravel(cnn.networkFilters, cnn.nn.weights);
-		double[] unraveledGradient = cnn.unravel(cnn.networkGradients, cnn.nn.gradients);
-		System.out.println("Beginning Back propogation...");
-		try {
-
-			do
-			{
-				LBFGS.lbfgs((cnn.numberOfVariables + cnn.nn.numberOfVariables), 300, unraveledWeights, cost2, unraveledGradient, false, cnn.diag, cnn.iprint, 1.0e-4, 1.0e-17, cnn.iflag);
-				cnn.reravel(unraveledWeights, cnn.networkFilters, cnn.nn.weights);
-				cnn.calculateForwardProp();
-				cnn.calculateCostFunctionPrimes();
-				cnn.calculateCostFunction(cnn.outputData, cnn.yHat);
-				cost2 = cnn.cost;
-				unraveledGradient = cnn.unravel(cnn.networkGradients, cnn.nn.gradients);
-				NeuralMatrix.printMatrix(cnn.yHat);
-		
-			} while(cnn.iflag[0] != 0);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("error");
-		}
-		*/
-		//Back propagation complete. 
-		
-		
 		
 	}
 	
@@ -391,109 +171,93 @@ public class ConvNeuralNet {
 		}
 		
 		nn = new NeuralNet(networkDescription);
-		
 		diag = new double [ numberOfVariables + nn.numberOfVariables];
 	}
 	public ConvNeuralNet(int[] networkDescription, int[][] convNetworkDescription, Double[][][][] inputData, Double[][] outputData)
 	{
+		
 		this(networkDescription, convNetworkDescription);
 		this.inputData = inputData;
 		this.outputData = outputData;
 		
-		File weightInitiatorPath = new File(filePath + loadFile);
+	}
+	public ConvNeuralNet(int[] networkDescription, int[][] convNetworkDescription, Double[][][][] inputData, Double[][] outputData, String saveFile)
+	{
 		
-		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
-			StringBuilder sb = new StringBuilder();
-			
-			String line;
-			for(int i = 0; i < convNetworkDescription.length; i++)
+		this(networkDescription, convNetworkDescription, inputData, outputData);
+		this.saveFile = saveFile;
+		nn.saveFile = "NN_" + saveFile; 
+		
+	}
+	public ConvNeuralNet(int[] networkDescription, int[][] convNetworkDescription, Double[][][][] inputData, Double[][] outputData, String saveFile, String loadFile)
+	{
+		
+		this(networkDescription, convNetworkDescription, inputData, outputData);
+		networkFilters = new ArrayList<Double[][][][]>();
+		this.saveFile = saveFile;
+		nn.saveFile = "NN_" + saveFile;
+		
+		this.loadFile = loadFile;
+		nn.loadFile = "NN_" + loadFile;
+		loadFile();
+		nn.loadFile();
+		
+		
+	}
+	
+	public void trainDataset()
+	{
+		calculateForwardProp();
+		
+		
+		calculateCostFunctionPrimes();
+		System.out.println("******************");
+		System.out.println("Calculating Primes");		
+		
+		for(int i = 0; i < networkGradients.size(); i++)
+		{
+			for(int j = 0; j < networkGradients.get(i).length; j++)
 			{
-				line = br.readLine();
-				String[] splitter = line.split(" ");
-			    networkDescription = new int[splitter.length];
-			    for(int j = 0; j < splitter.length; j++)
-			    {
-			    	convNetworkDescription[i][j] = Integer.parseInt(splitter[j]);
-			    }
-				
+				for(int k = 0; k < networkGradients.get(i)[j].length; k++)
+				{
+					NeuralMatrix.printMatrix(networkGradients.get(i)[j][k]);
+					System.out.println("--New Matrix--");
+				}
 			}
-			
-		    
-		    line = br.readLine();
-		    line = br.readLine();
-		    int counter = 0;
-		    while (!line.equals("EOF") && line != null) {
-		    	//First need to get the number of filter sets at this layer
-		    	int numOfFilterSets = convNetworkDescription[counter][1];
-		    	
-		    	//Next get the depth of the filter sets (3 at layer 0, or previous layers filters
-		    	int depthOfFilterSets = 3;
-		    	if(counter != 0)
-		    	{
-		    		depthOfFilterSets = convNetworkDescription[counter-1][1];
-		    	}
-		    	
-		    	//Finally get the dimension of your filter
-		    	int filterDimension = convNetworkDescription[counter][0];
-		    	
-		    	//Construct this layer's temp weights
-		    	Double[][][][] tempWeights = new Double[numOfFilterSets][depthOfFilterSets][filterDimension][filterDimension];
-
-
-		    	//Need to do something complicated
-		    	int numberOfFilterSetsReached = 0;
-		    	int numberOfFiltersInSetReached = 0;
-		    	int indexOfFilterLength = 0;
-		    	while (
-		    			!line.equals("EOF") && 
-		    			(!line.equals("----") && numberOfFilterSetsReached != numOfFilterSets  && numberOfFiltersInSetReached != depthOfFilterSets) 
-		    			&& line != null) 
-		    	{
-		    		if(line == "----")
-		    		{
-		    			if(numberOfFiltersInSetReached == depthOfFilterSets)
-		    			{
-		    				numberOfFiltersInSetReached = 0;
-		    				indexOfFilterLength = 0;
-		    				numberOfFilterSetsReached++;
-		    				counter++;
-		    			}
-		    			else
-		    			{
-		    				indexOfFilterLength = 0;
-		    				numberOfFiltersInSetReached++;
-		    			}
-		    		}
-		    		else
-		    		{
-		    			String[] matrixSplitter = line.split(" ");
-					    
-					    for(int i = 0; i < matrixSplitter.length; i++)
-					    {
-					    	tempWeights[numberOfFiltersInSetReached][numberOfFilterSetsReached][indexOfFilterLength][i] = Double.parseDouble(matrixSplitter[i]);
-					    }
-					    
-					    indexOfFilterLength++;				        
-		    		}
-		    		
-		    		
-		    		line = br.readLine();
-			        if(!line.equals("----") && numberOfFilterSetsReached != numOfFilterSets  && numberOfFiltersInSetReached != depthOfFilterSets)
-			        {
-			        	networkFilters.add(tempWeights);
-			        }
-
-		    	}
-//		    	counter++;
-		        line = br.readLine();
-		    }
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("*");
 		}
 		
+		System.out.println("Printing NN Gradients");
+		for(int i = 0; i < nn.networkDescription.length-1; i++)
+		{
+			NeuralMatrix.printMatrix(nn.gradients.get(i));
+			System.out.println("*");
+		}
 		
+		//Save some temp variables and begin unraveling the weights for back propagation
+		double cost2 = cost;
+		double[] unraveledWeights = unravel(networkFilters, nn.weights);
+		double[] unraveledGradient = unravel(networkGradients, nn.gradients);
+		System.out.println("Beginning Back propogation...");
+		try {
+
+			do
+			{
+				LBFGS.lbfgs((numberOfVariables + nn.numberOfVariables), 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, 1.0e-4, 1.0e-17, iflag);
+				reravel(unraveledWeights, networkFilters, nn.weights);
+				calculateForwardProp();
+				calculateCostFunctionPrimes();
+				calculateCostFunction(outputData, yHat);
+				cost2 = cost;
+				unraveledGradient = unravel(networkGradients, nn.gradients);
+				NeuralMatrix.printMatrix(yHat);
+		
+			} while(iflag[0] != 0);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("error");
+		}
 	}
 	
 	public void calculateForwardProp()
@@ -504,6 +268,13 @@ public class ConvNeuralNet {
 			int stride = convNetworkDescription[i][2];
 			int outputImageLength = (int) Math.ceil(a[0][0].length/(double)stride);
 			int outputImageWidth = (int) Math.ceil(a[0][0][0].length/(double)stride);
+			
+			//4D array is: number of images x number of filter sets x output length x output width
+			//result[x][][][] = the result of the convolution of each image, 
+			//       so result[1][][][] holds the convolution result for image 1 - this mimicks bulk processing
+			//result[][x][][] = the depth dimension of my convolution volume output for a given image
+			//result[][][x][] = the length dimension of my convolution volume output
+			//result[][][][x] = the width dimension of my convolution volume output
 			Double[][][][] z = new Double[a.length][networkFilters.get(0).length][outputImageLength][outputImageWidth];
 			
 			//z = a.convolve(filter)
@@ -525,51 +296,50 @@ public class ConvNeuralNet {
 		yHatCNN = a;
 		
 		//Print out some random result
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println("Printing out the final image convolution result");
+//		System.out.println();
+//		System.out.println();
+//		System.out.println();
+//		System.out.println("Printing out the final image convolution result");
+//		
+//		for(int i = 0; i < yHatCNN.length; i++)
+//		{
+//			for(int j = 0; j < yHatCNN[0].length; j++)
+//			{
+//				NeuralMatrix.printMatrix(yHatCNN[i][j]);
+//				System.out.println("--New Matrix--");
+//			}
+//		}
 		
-		for(int i = 0; i < yHatCNN.length; i++)
-		{
-			for(int j = 0; j < yHatCNN[0].length; j++)
-			{
-				NeuralMatrix.printMatrix(yHatCNN[i][j]);
-				System.out.println("--New Matrix--");
-			}
-		}
-		
-		System.out.println();
-		System.out.println("Printing out the transformed Neural Net input");
+//		System.out.println();
+//		System.out.println("Printing out the transformed Neural Net input");
 		Double[][] nnInput = transformVolumeToNNInput();
-		NeuralMatrix.printMatrix(nnInput);
-				
-//		networkDescription[0] = nnInput[0].length;
-//		NeuralNet nn = new NeuralNet(networkDescription, nnInput, outputData);
+//		NeuralMatrix.printMatrix(nnInput);
+
+
 		nn.inputData = nnInput;
 		nn.outputData = outputData;
 		nn.normalizeMatrix(nn.inputData);
 		
-		System.out.println("Beginning neural net");
+//		System.out.println("Beginning neural net");
 		nn.calculateForwardProp();
 		yHat = nn.yHat;
 		
-		System.out.println("");
-		System.out.println("NN Output");
-		NeuralMatrix.printMatrix(yHat);
+//		System.out.println("");
+//		System.out.println("NN Output");
+//		NeuralMatrix.printMatrix(yHat);
 		
 		
 		cost = calculateCostFunction(outputData, yHat);
-		System.out.println("Cost output is");
+//		System.out.println("Cost output is");
 		
-		System.out.println(cost);
+//		System.out.println(cost);
 		
 		
 		
 	}
 	
 	//Some method to transform the output of the forwardpropogation of CNN to input of NN
-	public Double[][] transformVolumeToNNInput()
+	private Double[][] transformVolumeToNNInput()
 	{
 		//This is really just unraveling my matrix into a 2D matrix
 		
@@ -588,7 +358,7 @@ public class ConvNeuralNet {
 		return nnInputs;
 	}
 	
-	public Double[][] convolution(Double[][][] image, Double[][][] filter, int stride)
+	private Double[][] convolution(Double[][][] image, Double[][][] filter, int stride)
 	{
 		int imageDepth = image.length;
 		int imageLength = image[0].length;
@@ -753,7 +523,7 @@ public class ConvNeuralNet {
 	
 	
 	//Helper method.  Takes in some 5D matrix and converts into a 1D matrix
-	public double[] unravel(ArrayList<Double[][][][]> unravelItems, ArrayList<Double[][]> unravelitemsNeuralNet)
+	private double[] unravel(ArrayList<Double[][][][]> unravelItems, ArrayList<Double[][]> unravelitemsNeuralNet)
 	{
 		ArrayList<Double> myList = new ArrayList<Double>();
 		for(int i = 0; i < unravelItems.size(); i++)
@@ -797,7 +567,7 @@ public class ConvNeuralNet {
 	}
 
 	//Helper method.  Takes in some 3D matrix and converts into a 1D matrix
-	public Double[] unravel(Double[][][] unravelItems)
+	private Double[] unravel(Double[][][] unravelItems)
 	{
 		ArrayList<Double> myList = new ArrayList<Double>();
 		for(int i = 0; i < unravelItems.length; i++)
@@ -820,7 +590,7 @@ public class ConvNeuralNet {
 	
 	
 	//Helper method.  Takes in a 1D matrix and converts it into the proper 5D matrix
-	public void reravel(double[] dArray, ArrayList<Double[][][][]> reravelItem, ArrayList<Double[][]> reravelItemNeuralNet)
+	private void reravel(double[] dArray, ArrayList<Double[][][][]> reravelItem, ArrayList<Double[][]> reravelItemNeuralNet)
 	{
 		int dPosition = 0;
 		for(int i = 0; i < reravelItem.size(); i++)
@@ -861,7 +631,7 @@ public class ConvNeuralNet {
 	}
 	
 	//Calculates how wrong our current state is
-	public double calculateCostFunction(Double[][] Y, Double[][] yHat)
+	private double calculateCostFunction(Double[][] Y, Double[][] yHat)
 	{
 		//Calculate weight complexity
 		//double complexityCost = this.calculateWeightComplexity();
@@ -879,7 +649,7 @@ public class ConvNeuralNet {
 	}
 	
 	
-	public void calculateCostFunctionPrimes()
+	private void calculateCostFunctionPrimes()
 	{
 		double epsilon = .00000001;
 
@@ -959,6 +729,110 @@ public class ConvNeuralNet {
 		    out.println("EOF");
 		    System.out.println("File save completed");
 		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		nn.saveWeights();
+	}
+	
+	private void loadFile()
+	{
+		File weightInitiatorPath = new File(filePath + loadFile);
+		
+		try(BufferedReader br = new BufferedReader(new FileReader(weightInitiatorPath))) {
+			StringBuilder sb = new StringBuilder();
+			
+			String line;
+			
+			ArrayList<int[]> tempConvDesc = new ArrayList<int[]>();
+			
+			line = br.readLine();
+			while (!line.equals("----"))
+			{
+				String[] splitter = line.split(" ");
+				
+			    int[] tempArray = new int[splitter.length];
+			    for(int i = 0; i < splitter.length; i++)
+			    {
+			    	tempArray[i] = Integer.parseInt(splitter[i]);
+			    }
+			    tempConvDesc.add(tempArray);
+			    line = br.readLine();
+			}
+			
+			convNetworkDescription = new int[tempConvDesc.size()][tempConvDesc.get(0).length];
+			
+			for(int i = 0; i < tempConvDesc.size(); i++)
+			{
+				convNetworkDescription[i] = tempConvDesc.get(i);
+			}
+		    
+		    int counter = 0;
+		    while (!line.equals("EOF") && line != null && counter < convNetworkDescription.length) {
+		    	//First need to get the number of filter sets at this layer
+		    	int numOfFilterSets = convNetworkDescription[counter][1];
+		    	
+		    	//Next get the depth of the filter sets (3 at layer 0, or previous layers filters
+		    	int depthOfFilterSets = 3;
+		    	if(counter != 0)
+		    	{
+		    		depthOfFilterSets = convNetworkDescription[counter-1][1];
+		    	}
+		    	
+		    	//Finally get the dimension of your filter
+		    	int filterDimension = convNetworkDescription[counter][0];
+		    	
+		    	//Construct this layer's temp weights
+		    	Double[][][][] tempWeights = new Double[numOfFilterSets][depthOfFilterSets][filterDimension][filterDimension];
+
+
+		    	//Need to do something complicated
+		    	int numberOfFilterSetsReached = 0;
+		    	int numberOfFiltersInSetReached = 0;
+		    	int indexOfFilterLength = 0;
+		    	while (
+		    			!line.equals("EOF") && 
+		    			(numberOfFilterSetsReached != -1  || numberOfFiltersInSetReached != -1) 
+		    			&& line != null) 
+		    	{
+		    		line = br.readLine();
+		    		if(line.equals("----"))
+		    		{
+		    			if(numberOfFilterSetsReached == numOfFilterSets-1  && numberOfFiltersInSetReached == depthOfFilterSets-1)
+				        {
+				        	networkFilters.add(tempWeights);
+				        	numberOfFilterSetsReached = -1;
+				        	numberOfFiltersInSetReached = -1;
+		    				indexOfFilterLength = 0;
+				        }
+		    			else if(numberOfFiltersInSetReached == depthOfFilterSets-1)
+		    			{
+		    				numberOfFiltersInSetReached = 0;
+		    				indexOfFilterLength = 0;
+		    				numberOfFilterSetsReached++;
+		    			}
+		    			else
+		    			{
+		    				indexOfFilterLength = 0;
+		    				numberOfFiltersInSetReached++;
+		    			}
+		    		}
+		    		else
+		    		{
+		    			String[] matrixSplitter = line.split(" ");
+					    
+					    for(int i = 0; i < matrixSplitter.length; i++)
+					    {
+					    	tempWeights[numberOfFilterSetsReached][numberOfFiltersInSetReached][indexOfFilterLength][i] = Double.parseDouble(matrixSplitter[i]);
+					    }
+					    
+					    indexOfFilterLength++;				        
+		    		}
+		    	}
+		    	counter++;
+		    }
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

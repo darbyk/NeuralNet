@@ -282,7 +282,7 @@ public class NeuralMatrix {
             	}
             }
         }
-        System.out.println("----ReLu Complete----");
+//        System.out.println("----ReLu Complete----");
 		
 		return result;
 	}
