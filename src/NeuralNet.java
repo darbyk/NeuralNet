@@ -299,7 +299,7 @@ public class NeuralNet {
 	
 	private void initializeValuesInMatrix(boolean isRandom, ArrayList<Double[][]> initializeItems)
 	{
-		System.out.println("Initializing Weights...");
+//		System.out.println("Initializing Weights...");
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
 			Double[][] tempLayer = new Double[networkDescription[i]][networkDescription[i+1]];
@@ -321,7 +321,7 @@ public class NeuralNet {
 				}
 			}
 			initializeItems.add(tempLayer);
-			NeuralMatrix.printMatrix(tempLayer);
+//			NeuralMatrix.printMatrix(tempLayer);
 		}
 	}
 	
