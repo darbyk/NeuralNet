@@ -155,6 +155,22 @@ public class NeuralMatrix {
         return c;
     }
     
+    
+    // return c = x - A
+    public static Double[][] subtractValue(Double[][] doubles, double x) {
+        int m1 = doubles.length;
+        int n1 = doubles[0].length;
+        Double[][] c = new Double[m1][n1];
+        for (int i = 0; i < m1; i++)
+                for (int k = 0; k < n1; k++)
+                {
+                	Double tempDouble = x - doubles[i][k];
+                    c[i][k] = tempDouble;
+                }
+        return c;
+    }
+    
+    
     // matrix-vector multiplication (y = A * x)
     public static double[] multiply(double[][] a, double[] x) {
         int m = a.length;
@@ -332,5 +348,16 @@ public class NeuralMatrix {
         System.out.print(Arrays.deepToString(g));
         System.out.println();
     }
+
+	public static Double[][] transpose(Double[][] a) 
+	{
+        int m = a.length;
+        int n = a[0].length;
+        Double[][] b = new Double[n][m];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                b[j][i] = a[i][j];
+        return b;
+	}
 
 }

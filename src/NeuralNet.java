@@ -16,6 +16,7 @@ public class NeuralNet {
 	String filePath = "C:\\NeuralNet\\";
 	String loadFile = "test.txt";
 	String saveFile = "test.txt";
+	double thresholdError = 1.0e-4;
 
 	//Matrix descriptors
 	Double[][] inputData;
@@ -24,6 +25,8 @@ public class NeuralNet {
 	double complexityCostLambda = 0.0001;
 	ArrayList<Double[][]> weights = new ArrayList<Double[][]>();
 	ArrayList<Double[][]> gradients = new ArrayList<Double[][]>();
+	ArrayList<Double[][]> activationFactors = new ArrayList<Double[][]>();
+	ArrayList<Double[][]> errorFactors = new ArrayList<Double[][]>();
 	
 	//Normalization Helper
 	double[] normalizationFactors;
@@ -109,41 +112,10 @@ public class NeuralNet {
 //		};
 		
 		//Initialize Network and normalize Testing data (training data is normalized in the initialization right now
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "26.20.1.txt");
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_26.20.1.txt");
 //		testData = NN.normalizeMatrix(testData);
 		
-//		NN.trainDataset();
-		
-		//Begin first pass of the neural network
-		NN.calculateForwardProp();
-		double cost = NN.calculateCostFunction(NN.outputData, NN.yHat);
-		NN.calculateCostFunctionPrimes();
-		NeuralMatrix.printMatrix(NN.yHat);
-		
-		//Save some temp variables and begin unraveling the weights for back propagation
-		double cost2 = NN.cost;
-		double[] unraveledWeights = NN.unravel(NN.weights);
-		double[] unraveledGradient = NN.unravel(NN.gradients);
-		System.out.println("Beginning Back propogation...");
-		try {
-
-			do
-			{
-				LBFGS.lbfgs(NN.numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, NN.diag, NN.iprint, 1.0e-4, 1.0e-17, NN.iflag);
-				NN.reravel(unraveledWeights, NN.weights);
-				NN.calculateForwardProp();
-				NN.calculateCostFunctionPrimes();
-				NN.calculateCostFunction(NN.outputData, NN.yHat);
-				cost2 = NN.cost;
-				unraveledGradient = NN.unravel(NN.gradients);
-				NeuralMatrix.printMatrix(NN.yHat);
-		
-			} while(NN.iflag[0] != 0);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("error");
-		}
+		NN.trainDataset();
 		
 		//Back propagation complete.  Now saving file and calculating results of test data
 		System.out.println("Saving Weights...");
@@ -163,12 +135,20 @@ public class NeuralNet {
 	{
 		//Begin first pass of the neural network
 		calculateForwardProp();
-		double cost = calculateCostFunction(outputData, yHat);
-		calculateCostFunctionPrimes();
+		calculateCostFunction(yHat, outputData);
+		if(thresholdError > this.cost)
+		{
+			System.out.println("Error is within acceptable threshold - no training needed");
+			System.out.println("Output of Neural Net");
+			NeuralMatrix.printMatrix(this.yHat);
+			return;
+		}
+		//calculateCostFunctionPrimesNumericalGradient();
+		calculateCostFunctionGradient();
 		NeuralMatrix.printMatrix(yHat);
 		
 		//Save some temp variables and begin unraveling the weights for back propagation
-		double cost2 = cost;
+		double cost2 = this.cost;
 		double[] unraveledWeights = unravel(weights);
 		double[] unraveledGradient = unravel(gradients);
 		System.out.println("Beginning Back propogation...");
@@ -176,12 +156,13 @@ public class NeuralNet {
 
 			do
 			{
-				LBFGS.lbfgs(numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, 1.0e-4, 1.0e-17, iflag);
+				LBFGS.lbfgs(numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, thresholdError, 1.0e-17, iflag);
 				reravel(unraveledWeights, weights);
 				calculateForwardProp();
-				calculateCostFunctionPrimes();
+				//calculateCostFunctionPrimesNumericalGradient();
+				calculateCostFunctionGradient();
 				calculateCostFunction(outputData, yHat);
-				cost2 = cost;
+				cost2 = this.cost;
 				unraveledGradient = unravel(gradients);
 				NeuralMatrix.printMatrix(yHat);
 		
@@ -191,6 +172,7 @@ public class NeuralNet {
 			e.printStackTrace();
 			System.out.println("error");
 		}
+		System.out.println("Output of Neural Net");
 	}
 	
 	public NeuralNet()
@@ -216,6 +198,13 @@ public class NeuralNet {
 		
 		//Initialize Gradients
 		initializeValuesInMatrix(false, gradients);
+		
+		//Initialize Error Factors
+//		initializeValuesInMatrix(false, errorFactors);
+		errorFactors.add(new Double[1][1]);
+		errorFactors.add(new Double[1][1]);
+		errorFactors.add(new Double[1][1]);
+		errorFactors.add(new Double[1][1]);
 		
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
@@ -328,15 +317,18 @@ public class NeuralNet {
 	public void calculateForwardProp()
 	{
 		Double[][] a = inputData;
+		activationFactors.add(0, a);
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
 			Double[][] z = new Double[a.length][weights.get(i)[0].length];
 			z = NeuralMatrix.multiply(a, weights.get(i));
 			a = NeuralMatrix.applySigmoid(z);
+			activationFactors.add(i+1, a);
 		}
 		yHat = a;
 	}
 
+	//Defines the cost function of our neural net and outputs the cost of our neural net
 	public double calculateCostFunction(Double[][] Y, Double[][] yHat)
 	{
 		//Calculate weight complexity
@@ -352,6 +344,62 @@ public class NeuralNet {
 		
 		return this.cost;
 	}
+	
+	//Calculate the exact gradient for our NeuralNetwork
+	public void calculateCostFunctionGradient()
+	{
+		for(int i = networkDescription.length - 1; i >= 0; i--)
+		{
+			Double[][] errorFactor;
+			if(i == networkDescription.length - 1)
+			{
+				Double[][] diff = NeuralMatrix.subtract(yHat, outputData);
+				Double[][] sigmoidGradient = NeuralMatrix.subtractValue(activationFactors.get(i), 1);
+				errorFactor = NeuralMatrix.multiplyVector(diff, sigmoidGradient);
+				errorFactors.add(i, errorFactor);
+			}
+			else
+			{
+				Double[][] sigmoidGradient = NeuralMatrix.subtractValue(activationFactors.get(i), 1);
+				Double[][] weightTranspose = NeuralMatrix.transpose(weights.get(i));
+				errorFactor = NeuralMatrix.multiply(NeuralMatrix.multiply(errorFactors.get(i+1), weightTranspose), sigmoidGradient);
+				errorFactors.add(i, errorFactor);
+			}
+			Double[][] activationFactorTranspose = NeuralMatrix.transpose(activationFactors.get(i));
+			gradients.set(i, NeuralMatrix.multiply(activationFactorTranspose, errorFactor));
+		}
+	}
+	
+	//Apply numerical gradient for now.  The actual derivative calculation is on hold.
+	public void calculateCostFunctionPrimesNumericalGradient()
+	{
+		double epsilon = .00000001;
+
+		double[] unraveled = this.unravel(weights);
+		double[] gradient = new double[unraveled.length];
+		
+		//We come into this method with varying weights from the original set sometimes.  Therefore, calculate the cost and store it.
+		calculateForwardProp();
+		this.calculateCostFunction(outputData, yHat);
+		double origCost = this.cost;
+
+		System.out.println("unraveled length: " + unraveled.length);
+		for(int i = 0; i < unraveled.length; i++)
+		{
+			unraveled[i] = unraveled[i] + epsilon;
+			this.reravel(unraveled, this.weights);
+			calculateForwardProp();
+			this.calculateCostFunction(outputData, yHat);
+			double pCost = this.cost;
+
+			gradient[i] = (pCost - origCost) / (epsilon);
+
+			unraveled[i] = unraveled[i] - epsilon;
+			this.reravel(unraveled, this.weights);
+		}
+		this.reravel(gradient, this.gradients);
+	}
+	
 	
 	//This method helps to apply regularization to the neural network.  
 	//We say the network is complex if the squared sum of the weights is large.
@@ -419,38 +467,6 @@ public class NeuralNet {
 		
 	}
 	
-	//Apply numerical gradient for now.  The actual derivative calculation is on hold.
-	public void calculateCostFunctionPrimes()
-	{
-		double epsilon = .00000001;
-
-		double[] unraveled = this.unravel(weights);
-		double[] gradient = new double[unraveled.length];
-		
-		//We come into this method with varying weights from the original set sometimes.  Therefore, calculate the cost and store it.
-		calculateForwardProp();
-		this.calculateCostFunction(outputData, yHat);
-		double origCost = this.cost;
-
-		System.out.println("unraveled length: " + unraveled.length);
-		for(int i = 0; i < unraveled.length; i++)
-		{
-			unraveled[i] = unraveled[i] + epsilon;
-			this.reravel(unraveled, this.weights);
-			calculateForwardProp();
-			this.calculateCostFunction(outputData, yHat);
-			double pCost = this.cost;
-
-			gradient[i] = (pCost - origCost) / (epsilon);
-
-			unraveled[i] = unraveled[i] - epsilon;
-			this.reravel(unraveled, this.weights);
-		}
-		this.reravel(gradient, this.gradients);
-	}
-	
-
-	
 	//Save the weights to the proper save file
 	public void saveWeights()
 	{
@@ -490,6 +506,8 @@ public class NeuralNet {
 			e.printStackTrace();
 		}
 	}
+	
+	//Load the weights from the specified file
 	public void loadFile()
 	{
 		weights = new ArrayList<Double[][]>();
