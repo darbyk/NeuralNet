@@ -157,7 +157,7 @@ public class NeuralMatrix {
     
     
     // return c = x - A
-    public static Double[][] subtractValue(Double[][] doubles, double x) {
+    public static Double[][] subtractValue(double x, Double[][] doubles) {
         int m1 = doubles.length;
         int n1 = doubles[0].length;
         Double[][] c = new Double[m1][n1];
@@ -359,5 +359,24 @@ public class NeuralMatrix {
                 b[j][i] = a[i][j];
         return b;
 	}
+
+	public static Double[][] multiplyScalar(Double[][] a, Double[][] b) {
+        int m1 = a.length;
+        int n1 = a[0].length;
+        int m2 = b.length;
+        int n2 = b[0].length;
+//        if (n2 != 1) throw new RuntimeException("Illegal matrix dimensions. Matrix B must be of size m x 1");
+        if (m1 != m2) throw new RuntimeException("Illegal matrix dimensions. m1: " + m1 + " m2: " + m2);
+        Double[][] c = new Double[m1][n2];
+        for (int i = 0; i < m1; i++)
+                for (int k = 0; k < n1; k++)
+                {
+//                	System.out.println("a @ (" + i + "," + k + ")");
+//                	System.out.println("b @ (" + i + "," + 0 + ")");
+//                	System.out.println(a[i][k] + "*" + b[i][0]);
+                    c[i][k] = a[i][k] * b[i][k];
+                }
+        return c;
+    }
 
 }

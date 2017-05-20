@@ -39,19 +39,28 @@ public class NeuralNet {
 	{
 		System.out.println("Begin matrix initialization...");
 //		int[] networkDescription = {729,12,6,3,1};
-		int[] networkDescription = {27,20,1};
+		int[] networkDescription = {2,3,1};
 		
 		ImageHelper helper = new ImageHelper("data\\");
 
+//		Double[][] inputData = {
+//				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0},
+//				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0}
+//		};
+//		
+//		Double[][] outputData = {
+//				{1.},
+//				{1.}
+//		};
+		
 		Double[][] inputData = {
-				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0},
-				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0}
+				{.3,.5}, {.5,.1}, {.10,.2}	
 		};
 		
 		Double[][] outputData = {
-				{1.},
-				{1.}
+				{.75}, {.82}, {.93}
 		};
+		
 		
 //		Double[][] inputData = {
 //				helper.extractBytes("eight1.png"),
@@ -112,14 +121,13 @@ public class NeuralNet {
 //		};
 		
 		//Initialize Network and normalize Testing data (training data is normalized in the initialization right now
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_26.20.1.txt");
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData);
 //		testData = NN.normalizeMatrix(testData);
-		
 		NN.trainDataset();
 		
 		//Back propagation complete.  Now saving file and calculating results of test data
 		System.out.println("Saving Weights...");
-		NN.saveWeights();
+//		NN.saveWeights();
 		
 		/* Saving the output data */
 //		NN.inputData = testData;
@@ -146,6 +154,7 @@ public class NeuralNet {
 		//calculateCostFunctionPrimesNumericalGradient();
 		calculateCostFunctionGradient();
 		NeuralMatrix.printMatrix(yHat);
+//		saveGradients();
 		
 		//Save some temp variables and begin unraveling the weights for back propagation
 		double cost2 = this.cost;
@@ -200,11 +209,11 @@ public class NeuralNet {
 		initializeValuesInMatrix(false, gradients);
 		
 		//Initialize Error Factors
-//		initializeValuesInMatrix(false, errorFactors);
-		errorFactors.add(new Double[1][1]);
-		errorFactors.add(new Double[1][1]);
-		errorFactors.add(new Double[1][1]);
-		errorFactors.add(new Double[1][1]);
+		initializeValuesInMatrix(false, errorFactors);
+//		errorFactors.add(new Double[1][1]);
+//		errorFactors.add(new Double[1][1]);
+//		errorFactors.add(new Double[1][1]);
+//		errorFactors.add(new Double[1][1]);
 		
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
@@ -348,25 +357,32 @@ public class NeuralNet {
 	//Calculate the exact gradient for our NeuralNetwork
 	public void calculateCostFunctionGradient()
 	{
-		for(int i = networkDescription.length - 1; i >= 0; i--)
+		for(int i = networkDescription.length - 1; i > 0; i--)
 		{
 			Double[][] errorFactor;
 			if(i == networkDescription.length - 1)
 			{
 				Double[][] diff = NeuralMatrix.subtract(yHat, outputData);
-				Double[][] sigmoidGradient = NeuralMatrix.subtractValue(activationFactors.get(i), 1);
-				errorFactor = NeuralMatrix.multiplyVector(diff, sigmoidGradient);
+				Double[][] sigmoidGradient = NeuralMatrix.multiplyScalar(NeuralMatrix.subtractValue(1, activationFactors.get(i-1)), activationFactors.get(i-1));
+				errorFactor = NeuralMatrix.multiplyVector(sigmoidGradient, diff);
 				errorFactors.add(i, errorFactor);
 			}
 			else
 			{
-				Double[][] sigmoidGradient = NeuralMatrix.subtractValue(activationFactors.get(i), 1);
+				Double[][] p1 = NeuralMatrix.subtractValue(1, activationFactors.get(i-1));
+				Double[][] p2 = activationFactors.get(i-1);
+				Double[][] sigmoidGradient = NeuralMatrix.multiplyScalar(p1, p2);
 				Double[][] weightTranspose = NeuralMatrix.transpose(weights.get(i));
-				errorFactor = NeuralMatrix.multiply(NeuralMatrix.multiply(errorFactors.get(i+1), weightTranspose), sigmoidGradient);
+				Double[][] temp = NeuralMatrix.multiply(errorFactors.get(i+1), weightTranspose);
+				System.out.println(temp.length + " x " + temp[0].length);
+				System.out.println(sigmoidGradient.length + " x " + sigmoidGradient[0].length);
+				errorFactor = NeuralMatrix.multiplyScalar(temp, sigmoidGradient);
 				errorFactors.add(i, errorFactor);
+				Double[][] activationFactorTranspose = NeuralMatrix.transpose(activationFactors.get(i-1));
+				Double[][] gradientResult = NeuralMatrix.multiply(activationFactorTranspose, errorFactors.get(i+1)); 
+				gradients.add(i, gradientResult);
 			}
-			Double[][] activationFactorTranspose = NeuralMatrix.transpose(activationFactors.get(i));
-			gradients.set(i, NeuralMatrix.multiply(activationFactorTranspose, errorFactor));
+			
 		}
 	}
 	
@@ -506,6 +522,47 @@ public class NeuralNet {
 			e.printStackTrace();
 		}
 	}
+	
+	//Save the weights to the proper save file
+	public void saveGradients()
+	{
+		try(  PrintWriter out = new PrintWriter( this.filePath + "gradients" + this.saveFile )  ){
+			String networkDescriptionString = "";
+			for(int i = 0; i < networkDescription.length; i++)
+			{
+				networkDescriptionString += networkDescription[i] + " ";
+			}
+			
+			ArrayList<String> weightsString = new ArrayList<String>();
+			for(int i = 0; i < gradients.size(); i++)
+			{
+				Double[][] d = gradients.get(i);
+				for(int x = 0; x < d.length; x++)
+				{
+					Double[] dx = d[x];
+					String curWeightLine = "";
+					for(int y = 0; y < dx.length; y++)
+					{
+						curWeightLine += dx[y] + " ";
+					}
+					weightsString.add(curWeightLine);
+				}
+				weightsString.add("----");
+			}
+			
+			out.println(networkDescriptionString);
+			out.println("----");
+		    for(String s : weightsString)
+		    {
+		    	out.println(s);
+		    }
+		    out.println("EOF");
+		    System.out.println("File save completed");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	//Load the weights from the specified file
 	public void loadFile()
