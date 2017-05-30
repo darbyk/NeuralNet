@@ -38,8 +38,8 @@ public class NeuralNet {
 	public static void main(String[] args)
 	{
 		System.out.println("Begin matrix initialization...");
-//		int[] networkDescription = {729,12,6,3,1};
-		int[] networkDescription = {2,3,1};
+		int[] networkDescription = {729,90,1};
+//		int[] networkDescription = {2,3,3,1};
 		
 		ImageHelper helper = new ImageHelper("data\\");
 
@@ -53,92 +53,94 @@ public class NeuralNet {
 //				{1.}
 //		};
 		
-		Double[][] inputData = {
-				{.3,.5}, {.5,.1}, {.10,.2}	
-		};
-		
-		Double[][] outputData = {
-				{.75}, {.82}, {.93}
-		};
-		
-		
 //		Double[][] inputData = {
-//				helper.extractBytes("eight1.png"),
-//				helper.extractBytes("eight2.png"),
-//				helper.extractBytes("one1.png"),
-//				helper.extractBytes("five1.png"),
-//				helper.extractBytes("eight3.png"),
-//				helper.extractBytes("eight5.png"),
-//				helper.extractBytes("eight6.png"),
-//				helper.extractBytes("nine1.png"),
-//				helper.extractBytes("zero1.png"),
-//				helper.extractBytes("eight7.png"),
-//				helper.extractBytes("eight8.png"),
-//				helper.extractBytes("eight10.png"),
-//				helper.extractBytes("eight11.png"),
-//				helper.extractBytes("eight12.png"),
-//				helper.extractBytes("eight14.png"),
-//				helper.extractBytes("four2.png"),
-//				helper.extractBytes("four3.png"),
-//				helper.extractBytes("eight4.png"),
-//				helper.extractBytes("four1.png"),
-//				helper.extractBytes("black.png"),
-//				helper.extractBytes("six2.png"),
-//				helper.extractBytes("six3.png"),
-//				helper.extractBytes("six4.png"),
-//				helper.extractBytes("six5.png")
+//				{.3,.5}, {.5,.1}, {.10,.2}	
 //		};
+//		
 //		Double[][] outputData = {
-//				{1.},
-//				{1.},
-//				{0.},
-//				{0.},
-//				{1.},
-//				{1.},
-//				{1.},
-//				{0.},
-//				{0.},
-//				{1.},
-//				{1.},
-//				{1.},
-//				{1.},
-//				{1.},
-//				{1.},
-//				{0.},
-//				{0.},
-//				{1.},
-//				{0.},
-//				{0.},
-//				{0.},
-//				{0.},
-//				{0.},
-//				{0.}
+//				{.75}, {.82}, {.93}
 //		};
+//		
 		
-//		Double[][] testData = {
-//				helper.extractBytes("eight16.png"),
-//				helper.extractBytes("six1.png")
-//		};
+		Double[][] inputData = {
+				helper.extractBytes("eight1.png"),
+				helper.extractBytes("eight2.png"),
+				helper.extractBytes("one1.png"),
+				helper.extractBytes("five1.png"),
+				helper.extractBytes("eight3.png"),
+				helper.extractBytes("eight5.png"),
+				helper.extractBytes("eight6.png"),
+				helper.extractBytes("nine1.png"),
+				helper.extractBytes("zero1.png"),
+				helper.extractBytes("eight7.png"),
+				helper.extractBytes("eight8.png"),
+				helper.extractBytes("eight10.png"),
+				helper.extractBytes("eight11.png"),
+				helper.extractBytes("eight12.png"),
+				helper.extractBytes("eight14.png"),
+				helper.extractBytes("four2.png"),
+				helper.extractBytes("four3.png"),
+				helper.extractBytes("eight4.png"),
+				helper.extractBytes("four1.png"),
+				helper.extractBytes("black.png"),
+				helper.extractBytes("six2.png"),
+				helper.extractBytes("six3.png"),
+				helper.extractBytes("six4.png"),
+				helper.extractBytes("six5.png")
+		};
+		Double[][] outputData = {
+				{1.},
+				{1.},
+				{0.},
+				{0.},
+				{1.},
+				{1.},
+				{1.},
+				{0.},
+				{0.},
+				{1.},
+				{1.},
+				{1.},
+				{1.},
+				{1.},
+				{1.},
+				{0.},
+				{0.},
+				{1.},
+				{0.},
+				{0.},
+				{0.},
+				{0.},
+				{0.},
+				{0.}
+		};
+		
+		Double[][] testData = {
+				helper.extractBytes("eight16.png"),
+				helper.extractBytes("six1.png")
+		};
 		
 		//Initialize Network and normalize Testing data (training data is normalized in the initialization right now
-		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData);
+//		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_test_3_layer.txt");
+//		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "3_test_3_layer.txt", "3_test_3_layer.txt");
+		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "fullImageTest_20170529.txt", "fullImageTest_20170529.txt");
+//		NN.saveWeights();
 //		testData = NN.normalizeMatrix(testData);
 		NN.trainDataset();
 		
 		//Back propagation complete.  Now saving file and calculating results of test data
 		System.out.println("Saving Weights...");
-//		NN.saveWeights();
+		NN.saveWeights();
 		
 		/* Saving the output data */
-//		NN.inputData = testData;
-//		System.out.println("Calculating our guess...");
-//		NN.calculateForwardProp();
-//		System.out.println("******");
-//		NeuralMatrix.printMatrix(NN.yHat);
+		NN.inputData = testData;
+		System.out.println("Calculating our guess...");
+		NN.calculateForwardProp();
+		System.out.println("******");
+		NeuralMatrix.printMatrix(NN.yHat);
 	}
 	
 	
-	//Whats wrong with this?
 	public void trainDataset()
 	{
 		//Begin first pass of the neural network
@@ -151,7 +153,8 @@ public class NeuralNet {
 			NeuralMatrix.printMatrix(this.yHat);
 			return;
 		}
-		//calculateCostFunctionPrimesNumericalGradient();
+//		calculateCostFunctionPrimesNumericalGradient();
+//		this.saveGradients();
 		calculateCostFunctionGradient();
 		NeuralMatrix.printMatrix(yHat);
 //		saveGradients();
@@ -168,7 +171,7 @@ public class NeuralNet {
 				LBFGS.lbfgs(numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, thresholdError, 1.0e-17, iflag);
 				reravel(unraveledWeights, weights);
 				calculateForwardProp();
-				//calculateCostFunctionPrimesNumericalGradient();
+//				calculateCostFunctionPrimesNumericalGradient();
 				calculateCostFunctionGradient();
 				calculateCostFunction(outputData, yHat);
 				cost2 = this.cost;
@@ -233,7 +236,7 @@ public class NeuralNet {
 		this.outputData = outputData;
 		
 		//Normalize Weights
-		normalizeMatrix(this.inputData);
+//		normalizeMatrix(this.inputData);
 		
 	}
 	
@@ -349,38 +352,41 @@ public class NeuralNet {
 		double answerCost = NeuralMatrix.sumVector(costResultMatrix)/2;
 		
 		//Sum our MatrixCost and our weightCost
-		this.cost = answerCost + complexityCost;
+		this.cost = answerCost;
+//		this.cost = answerCost + complexityCost;
 		
 		return this.cost;
 	}
 	
 	//Calculate the exact gradient for our NeuralNetwork
+	//IT WORKS!!
 	public void calculateCostFunctionGradient()
 	{
-		for(int i = networkDescription.length - 1; i > 0; i--)
+		for(int i = networkDescription.length - 1; i >= 0; i--)
 		{
 			Double[][] errorFactor;
 			if(i == networkDescription.length - 1)
 			{
 				Double[][] diff = NeuralMatrix.subtract(yHat, outputData);
-				Double[][] sigmoidGradient = NeuralMatrix.multiplyScalar(NeuralMatrix.subtractValue(1, activationFactors.get(i-1)), activationFactors.get(i-1));
+				Double[][] sigmoidGradient = NeuralMatrix.multiplyScalar(NeuralMatrix.subtractValue(1, activationFactors.get(i)), activationFactors.get(i));
 				errorFactor = NeuralMatrix.multiplyVector(sigmoidGradient, diff);
 				errorFactors.add(i, errorFactor);
 			}
 			else
 			{
-				Double[][] p1 = NeuralMatrix.subtractValue(1, activationFactors.get(i-1));
-				Double[][] p2 = activationFactors.get(i-1);
+				Double[][] p1 = NeuralMatrix.subtractValue(1, activationFactors.get(i));
+				Double[][] p2 = activationFactors.get(i);
 				Double[][] sigmoidGradient = NeuralMatrix.multiplyScalar(p1, p2);
 				Double[][] weightTranspose = NeuralMatrix.transpose(weights.get(i));
 				Double[][] temp = NeuralMatrix.multiply(errorFactors.get(i+1), weightTranspose);
 				System.out.println(temp.length + " x " + temp[0].length);
 				System.out.println(sigmoidGradient.length + " x " + sigmoidGradient[0].length);
 				errorFactor = NeuralMatrix.multiplyScalar(temp, sigmoidGradient);
-				errorFactors.add(i, errorFactor);
-				Double[][] activationFactorTranspose = NeuralMatrix.transpose(activationFactors.get(i-1));
-				Double[][] gradientResult = NeuralMatrix.multiply(activationFactorTranspose, errorFactors.get(i+1)); 
-				gradients.add(i, gradientResult);
+				errorFactors.set(i, errorFactor);
+				Double[][] activationFactorTranspose = NeuralMatrix.transpose(activationFactors.get(i));
+				Double[][] tempErrorFactors = errorFactors.get(i+1);
+				Double[][] gradientResult = NeuralMatrix.multiply(activationFactorTranspose, tempErrorFactors); 
+				gradients.set(i, gradientResult);
 			}
 			
 		}

@@ -7,8 +7,8 @@ public class NeuralNetwork {
 	int outputLayerSize;
 	int hiddenLayerSize;
 	
-	double[][] W1 = { { .427, 0.141, .486}, { .942, .583, .983} };
-	double[][] W2 = { {.209}, { .666}, { .393} };
+	double[][] W1 = { { 0.771, -0.425, 0.944}, { 0.422, 0.102, 0.277} };
+	double[][] W2 = { {0.665}, { 0.816}, { -0.189} };
 	
 	//Starting Values
 //	double[][] W1 = { { 0.47294868, 0.20886289, -0.38692276 }, { -1.62662175, -0.19100219, 0.58192548 } };
@@ -90,7 +90,7 @@ public class NeuralNetwork {
 			do
 			{
 				
-				LBFGS.lbfgs(9, 200, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, 1.0e-7, 1.0e-15, iflag);
+				LBFGS.lbfgs(9, 200, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, 1.0e-4, 1.0e-15, iflag);
 				NN.reravel(unraveledWeights);
 				NN.calculateForwardProp();
 				NN.calculateCostFunctionPrimes();
@@ -174,7 +174,7 @@ public class NeuralNetwork {
 	
 	public void calculateCostFunctionPrimes()
 	{
-		if(true)
+		if(false)
 		{
 			double epsilon = .00001;
 	
@@ -225,11 +225,13 @@ public class NeuralNetwork {
 		else
 		{
 			double[][] D3temp = Matrix.subtract(this.yHat, this.Y);
-			this.D3 = Matrix.multiplyVector(D3temp, Matrix.applySigmoidPrime(this.Z3));
+			double[][] sigmoidGradient = Matrix.applySigmoidPrime(this.Z3);
+			this.D3 = Matrix.multiplyVector(D3temp, sigmoidGradient);
 			
 			this.djdw2 = Matrix.multiply(Matrix.transpose(this.A2), this.D3);
 	
-			double[][] D2 = Matrix.multiplyScalar(Matrix.multiply(this.D3, Matrix.transpose(this.W2)), Matrix.applySigmoidPrime(this.Z2));
+			double[][] D2temp = Matrix.multiply(this.D3, Matrix.transpose(this.W2));
+			double[][] D2 = Matrix.multiplyScalar(D2temp, Matrix.applySigmoidPrime(this.Z2));
 			this.djdw1 = Matrix.multiply(Matrix.transpose(this.X), D2);
 		}
 		
