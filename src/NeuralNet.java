@@ -37,30 +37,12 @@ public class NeuralNet {
 	
 	public static void main(String[] args)
 	{
+		//We need to define the hyper parameters of our neural network
 		System.out.println("Begin matrix initialization...");
 		int[] networkDescription = {729,90,1};
-//		int[] networkDescription = {2,3,3,1};
 		
+		//Now we want to define our input data.  We use a helper class in order to help extract the information
 		ImageHelper helper = new ImageHelper("data\\");
-
-//		Double[][] inputData = {
-//				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0},
-//				{0.0, 0.8621921730610058, 4.4242234639960065, 0.0, 0.0, 0.0, 0.6167639793850013, 0.0, 3.3093691111319985, 7.9028986011220015, 6.112314447237004, 0.0, 0.0, 14.842492656291999, 0.0, 0.0, 7.974941349325999, 0.0, 0.0, 1.1066453620699996, 4.229247608227007, 0.0, 0.0, 0.0, 7.80149380049, 0.0, 0.0}
-//		};
-//		
-//		Double[][] outputData = {
-//				{1.},
-//				{1.}
-//		};
-		
-//		Double[][] inputData = {
-//				{.3,.5}, {.5,.1}, {.10,.2}	
-//		};
-//		
-//		Double[][] outputData = {
-//				{.75}, {.82}, {.93}
-//		};
-//		
 		
 		Double[][] inputData = {
 				helper.extractBytes("eight1.png"),
@@ -86,7 +68,8 @@ public class NeuralNet {
 				helper.extractBytes("six2.png"),
 				helper.extractBytes("six3.png"),
 				helper.extractBytes("six4.png"),
-				helper.extractBytes("six5.png")
+				helper.extractBytes("six5.png"),
+				helper.extractBytes("seven5.png")
 		};
 		Double[][] outputData = {
 				{1.},
@@ -112,27 +95,45 @@ public class NeuralNet {
 				{0.},
 				{0.},
 				{0.},
+				{0.},
 				{0.}
 		};
 		
+		//This is the test data we want to measure our results against
 		Double[][] testData = {
 				helper.extractBytes("eight16.png"),
-				helper.extractBytes("six1.png")
+				helper.extractBytes("eight17.png"),
+				helper.extractBytes("eight18.png"),
+				helper.extractBytes("eight19.png"),
+				helper.extractBytes("eight20.png"),
+				helper.extractBytes("eight21.png"),
+				helper.extractBytes("eight22.png"),
+				helper.extractBytes("eight26.png"),
+				helper.extractBytes("nine3.png"),
+				helper.extractBytes("nine4.png"),
+				helper.extractBytes("nine7.png"),
+				helper.extractBytes("seven7.png"),
+				helper.extractBytes("seven6.png")
 		};
 		
-		//Initialize Network and normalize Testing data (training data is normalized in the initialization right now
-//		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "2_test_3_layer.txt");
-//		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "3_test_3_layer.txt", "3_test_3_layer.txt");
+		//Initialize Network and normalize Testing data (training data is normalized in the initialization right now)
+		//Our neural net is going to be normalized during creation
+		//The idea of our normalization factors created during normalization is so we can multiple 
+		//our normalization factors agsinst our results to receive our final answer.
 		NeuralNet NN = new NeuralNet(networkDescription, inputData, outputData, "fullImageTest_20170529.txt", "fullImageTest_20170529.txt");
-//		NN.saveWeights();
-//		testData = NN.normalizeMatrix(testData);
+		
+		//Since we've already trained some data, we want to load the pre-computed weights. 
+		//This can only be done if you have a properly constructed file at the given location: C:\\NeuralNet\\<yourFileName>
+		NN.loadFile();
+		
+		//Finally we can train our dataset
 		NN.trainDataset();
 		
-		//Back propagation complete.  Now saving file and calculating results of test data
+		//Training now should be complete.  At this point we can save our weights, which is our actual computed answer.
 		System.out.println("Saving Weights...");
 		NN.saveWeights();
 		
-		/* Saving the output data */
+		//Lets test our answer against our test data and see how we did.
 		NN.inputData = testData;
 		System.out.println("Calculating our guess...");
 		NN.calculateForwardProp();
@@ -146,6 +147,8 @@ public class NeuralNet {
 		//Begin first pass of the neural network
 		calculateForwardProp();
 		calculateCostFunction(yHat, outputData);
+		
+		//If we already have an acceptable answer, there is no need to run our training algorithm. 
 		if(thresholdError > this.cost)
 		{
 			System.out.println("Error is within acceptable threshold - no training needed");
@@ -153,11 +156,10 @@ public class NeuralNet {
 			NeuralMatrix.printMatrix(this.yHat);
 			return;
 		}
-//		calculateCostFunctionPrimesNumericalGradient();
-//		this.saveGradients();
+
+		//Lets calculate our gradients or first derivative of our neural net function
 		calculateCostFunctionGradient();
 		NeuralMatrix.printMatrix(yHat);
-//		saveGradients();
 		
 		//Save some temp variables and begin unraveling the weights for back propagation
 		double cost2 = this.cost;
@@ -168,13 +170,18 @@ public class NeuralNet {
 
 			do
 			{
+				//This is the heart of our back propogation.  The LBFGS algorithm takes in a set of gradients, current cost, and other items
+				//in order to properly calculate the next step we should take.
 				LBFGS.lbfgs(numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, thresholdError, 1.0e-17, iflag);
+				
+				//Lets place our new weights back into the proper place and recalculate our gradients and cost
 				reravel(unraveledWeights, weights);
 				calculateForwardProp();
-//				calculateCostFunctionPrimesNumericalGradient();
 				calculateCostFunctionGradient();
 				calculateCostFunction(outputData, yHat);
 				cost2 = this.cost;
+				
+				//Prepare gradients for next pass
 				unraveledGradient = unravel(gradients);
 				NeuralMatrix.printMatrix(yHat);
 		
@@ -182,7 +189,7 @@ public class NeuralNet {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("error");
+			System.out.println("An error has occurred during back propogation and training");
 		}
 		System.out.println("Output of Neural Net");
 	}
@@ -213,10 +220,6 @@ public class NeuralNet {
 		
 		//Initialize Error Factors
 		initializeValuesInMatrix(false, errorFactors);
-//		errorFactors.add(new Double[1][1]);
-//		errorFactors.add(new Double[1][1]);
-//		errorFactors.add(new Double[1][1]);
-//		errorFactors.add(new Double[1][1]);
 		
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
@@ -236,13 +239,15 @@ public class NeuralNet {
 		this.outputData = outputData;
 		
 		//Normalize Weights
-//		normalizeMatrix(this.inputData);
+		normalizeMatrix(this.inputData);
 		
 	}
 	
 	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData, String saveFile)
 	{
+		//Setup for LBFGS algorithm and initialization of network
 		this(networkDescription, inputData, outputData);
+		
 		//Begin initialization of network
 		this.saveFile = saveFile;
 		
@@ -250,23 +255,19 @@ public class NeuralNet {
 	
 	public NeuralNet(int[] networkDescription, Double[][] inputData, Double[][] outputData, String saveFile, String loadFile)
 	{
-		
 		//Setup for LBFGS algorithm and initialization of network
 		this(networkDescription, inputData, outputData);
 		
 		//Initialize save and load file locations
 		this.loadFile = loadFile;
 		this.saveFile = saveFile;
-		weights = new ArrayList<Double[][]>();
-		
-		loadFile();
 	}
 	
-	
-	//Refactor this. Instead of saving the normalizationFactors the first time, it should be broken into 2 methods.
+	//When we normalize our input data, we want to normalize it per column rather than overall since each
+	//column has the possibility of representing its own piece of distinct information and columns do not
+	//necessarily relate to each other in any way
 	public Double[][] normalizeMatrix(Double[][] normalizingMatrix)
 	{
-//		System.out.println("Normalizing Data...");
 		//Find Max Value. If already found, then skip
 		double[] maxOfColumn;
 		if(normalizationFactors == null)
@@ -281,7 +282,7 @@ public class NeuralNet {
 				}
 			}
 			normalizationFactors = maxOfColumn;
-		}
+		}     
 		
 		for(int i = 0; i < normalizingMatrix.length; i++)
 		{
@@ -300,7 +301,6 @@ public class NeuralNet {
 	
 	private void initializeValuesInMatrix(boolean isRandom, ArrayList<Double[][]> initializeItems)
 	{
-//		System.out.println("Initializing Weights...");
 		for(int i = 0; i < networkDescription.length - 1; i++)
 		{
 			Double[][] tempLayer = new Double[networkDescription[i]][networkDescription[i+1]];
@@ -322,10 +322,10 @@ public class NeuralNet {
 				}
 			}
 			initializeItems.add(tempLayer);
-//			NeuralMatrix.printMatrix(tempLayer);
 		}
 	}
 	
+	//This is how we get the answer of our neural net.  It is simply a set of matrix manipulation and storage
 	public void calculateForwardProp()
 	{
 		Double[][] a = inputData;
@@ -377,12 +377,14 @@ public class NeuralNet {
 				Double[][] p1 = NeuralMatrix.subtractValue(1, activationFactors.get(i));
 				Double[][] p2 = activationFactors.get(i);
 				Double[][] sigmoidGradient = NeuralMatrix.multiplyScalar(p1, p2);
+				
 				Double[][] weightTranspose = NeuralMatrix.transpose(weights.get(i));
 				Double[][] temp = NeuralMatrix.multiply(errorFactors.get(i+1), weightTranspose);
 				System.out.println(temp.length + " x " + temp[0].length);
 				System.out.println(sigmoidGradient.length + " x " + sigmoidGradient[0].length);
 				errorFactor = NeuralMatrix.multiplyScalar(temp, sigmoidGradient);
 				errorFactors.set(i, errorFactor);
+				
 				Double[][] activationFactorTranspose = NeuralMatrix.transpose(activationFactors.get(i));
 				Double[][] tempErrorFactors = errorFactors.get(i+1);
 				Double[][] gradientResult = NeuralMatrix.multiply(activationFactorTranspose, tempErrorFactors); 
@@ -392,7 +394,7 @@ public class NeuralNet {
 		}
 	}
 	
-	//Apply numerical gradient for now.  The actual derivative calculation is on hold.
+	//Apply numerical gradient for now.  This can be used if the cost function, activation function, or neuron type changes
 	public void calculateCostFunctionPrimesNumericalGradient()
 	{
 		double epsilon = .00000001;
@@ -469,7 +471,7 @@ public class NeuralNet {
 		return d;
 	}
 	
-	//Helper method.  Takes in a 1D marix and converts it into the proper 3D matrix
+	//Helper method.  Takes in a 1D matrix and converts it into the proper 3D matrix
 	public void reravel(double[] d, ArrayList<Double[][]> reravelItem)
 	{
 		int dPosition = 0;
