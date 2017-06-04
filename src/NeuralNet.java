@@ -47,23 +47,23 @@ public class NeuralNet {
 		Double[][] inputData = {
 				helper.extractBytes("eight1.png"),
 				helper.extractBytes("eight2.png"),
-				helper.extractBytes("one1.png"),
-				helper.extractBytes("five1.png"),
 				helper.extractBytes("eight3.png"),
+				helper.extractBytes("eight4.png"),
 				helper.extractBytes("eight5.png"),
 				helper.extractBytes("eight6.png"),
-				helper.extractBytes("nine1.png"),
-				helper.extractBytes("zero1.png"),
 				helper.extractBytes("eight7.png"),
 				helper.extractBytes("eight8.png"),
 				helper.extractBytes("eight10.png"),
 				helper.extractBytes("eight11.png"),
 				helper.extractBytes("eight12.png"),
 				helper.extractBytes("eight14.png"),
+				helper.extractBytes("nine1.png"),
+				helper.extractBytes("zero1.png"),
+				helper.extractBytes("one1.png"),
+				helper.extractBytes("four1.png"),
+				helper.extractBytes("five1.png"),
 				helper.extractBytes("four2.png"),
 				helper.extractBytes("four3.png"),
-				helper.extractBytes("eight4.png"),
-				helper.extractBytes("four1.png"),
 				helper.extractBytes("black.png"),
 				helper.extractBytes("six2.png"),
 				helper.extractBytes("six3.png"),
@@ -74,13 +74,10 @@ public class NeuralNet {
 		Double[][] outputData = {
 				{1.},
 				{1.},
-				{0.},
-				{0.},
 				{1.},
 				{1.},
 				{1.},
-				{0.},
-				{0.},
+				{1.},
 				{1.},
 				{1.},
 				{1.},
@@ -89,7 +86,10 @@ public class NeuralNet {
 				{1.},
 				{0.},
 				{0.},
-				{1.},
+				{0.},
+				{0.},
+				{0.},
+				{0.},
 				{0.},
 				{0.},
 				{0.},
@@ -124,7 +124,7 @@ public class NeuralNet {
 		
 		//Since we've already trained some data, we want to load the pre-computed weights. 
 		//This can only be done if you have a properly constructed file at the given location: C:\\NeuralNet\\<yourFileName>
-		NN.loadFile();
+//		NN.loadFile();
 		
 		//Finally we can train our dataset
 		NN.trainDataset();
@@ -352,8 +352,7 @@ public class NeuralNet {
 		double answerCost = NeuralMatrix.sumVector(costResultMatrix)/2;
 		
 		//Sum our MatrixCost and our weightCost
-		this.cost = answerCost;
-//		this.cost = answerCost + complexityCost;
+		this.cost = answerCost + complexityCost;
 		
 		return this.cost;
 	}
@@ -387,10 +386,14 @@ public class NeuralNet {
 				
 				Double[][] activationFactorTranspose = NeuralMatrix.transpose(activationFactors.get(i));
 				Double[][] tempErrorFactors = errorFactors.get(i+1);
-				Double[][] gradientResult = NeuralMatrix.multiply(activationFactorTranspose, tempErrorFactors); 
+				Double[][] gradientTempResult = NeuralMatrix.multiply(activationFactorTranspose, tempErrorFactors); 
+				
+				//Add regularization to our algorithm
+				Double[][] regularization = NeuralMatrix.multiplyScalar(weights.get(i), (complexityCostLambda/2.0));
+				
+				Double[][] gradientResult = NeuralMatrix.add(gradientTempResult, regularization);
 				gradients.set(i, gradientResult);
 			}
-			
 		}
 	}
 	

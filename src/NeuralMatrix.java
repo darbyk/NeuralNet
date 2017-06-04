@@ -98,6 +98,17 @@ public class NeuralMatrix {
         return c;
     }
     
+    // return c = a + b
+    public static Double[][] add(Double[][] a, Double[][] b) {
+        int m = a.length;
+        int n = a[0].length;
+        Double[][] c = new Double[m][n];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                c[i][j] = a[i][j] + b[i][j];
+        return c;
+    }
+    
     // return c = a * b
     public static Double[][] multiplyVector(Double[][] costResultMatrix, Double[][] costResultMatrix2) {
         int m1 = costResultMatrix.length;
@@ -151,6 +162,19 @@ public class NeuralMatrix {
                 for (int k = 0; k < n1; k++)
                 {
                     c[i][k] += a[i][k] * epsilon;
+                }
+        return c;
+    }
+
+    // return c = A * epsilon
+    public static Double[][] multiplyScalar(Double[][] a, Double epsilon) {
+        int m1 = a.length;
+        int n1 = a[0].length;
+        Double[][] c = new Double[m1][n1];
+        for (int i = 0; i < m1; i++)
+                for (int k = 0; k < n1; k++)
+                {
+                    c[i][k] = a[i][k] * epsilon;
                 }
         return c;
     }
