@@ -1,3 +1,5 @@
+package com.darby.neuralnet;
+
 /* RISO: an implementation of distributed belief networks.
  * Copyright (C) 1999, Robert Dodier.
  *

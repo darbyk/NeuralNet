@@ -1,3 +1,5 @@
+package com.darby.neuralnet;
+
 //Notes: 
 //1. Something is probably wrong with the normalization method of the neural network.
 //    We probably don't want to normalize each time for an image.  We'll likely have 0
