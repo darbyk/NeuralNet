@@ -17,6 +17,7 @@ public class NeuralNet {
 	String loadFile = "test.txt";
 	String saveFile = "test.txt";
 	double thresholdError = 1.0e-4;
+	int maxNumberOfLoops = 200;
 
 	//Matrix descriptors
 	Double[][] inputData;
@@ -30,6 +31,8 @@ public class NeuralNet {
 	
 	//Normalization Helper
 	double[] normalizationFactors;
+	double outputMin;
+	double outputMax;
 	
 	//Results
 	Double[][] yHat;
@@ -166,13 +169,18 @@ public class NeuralNet {
 		double[] unraveledWeights = unravel(weights);
 		double[] unraveledGradient = unravel(gradients);
 		System.out.println("Beginning Back propogation...");
+		int numberOfLoops = 0;
 		try {
 
 			do
 			{
+				System.out.println(weights.size());
+				System.out.println(gradients.size());
+				System.out.println(activationFactors.size());
+				System.out.println(errorFactors.size());
 				//This is the heart of our back propogation.  The LBFGS algorithm takes in a set of gradients, current cost, and other items
 				//in order to properly calculate the next step we should take.
-				LBFGS.lbfgs(numberOfVariables, 300, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, thresholdError, 1.0e-17, iflag);
+				LBFGS.lbfgs(numberOfVariables, 150, unraveledWeights, cost2, unraveledGradient, false, diag, iprint, thresholdError, 1.0e-17, iflag);
 				
 				//Lets place our new weights back into the proper place and recalculate our gradients and cost
 				reravel(unraveledWeights, weights);
@@ -183,9 +191,10 @@ public class NeuralNet {
 				
 				//Prepare gradients for next pass
 				unraveledGradient = unravel(gradients);
-				NeuralMatrix.printMatrix(yHat);
+//				NeuralMatrix.printMatrix(yHat);
+				numberOfLoops++;
 		
-			} while(iflag[0] != 0);
+			} while(iflag[0] != 0 && numberOfLoops < maxNumberOfLoops);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -240,6 +249,7 @@ public class NeuralNet {
 		
 		//Normalize Weights
 		normalizeMatrix(this.inputData);
+		minMaxNormalization(this.outputData);
 		
 	}
 	
@@ -277,7 +287,7 @@ public class NeuralNet {
 			{
 				for(int j = 0; j < normalizingMatrix[i].length; j++)
 				{
-					if(maxOfColumn[j] < normalizingMatrix[i][j])
+					if(normalizingMatrix[i][j] != null && maxOfColumn[j] < normalizingMatrix[i][j])
 						maxOfColumn[j] = normalizingMatrix[i][j];
 				}
 			}
@@ -290,12 +300,40 @@ public class NeuralNet {
 			{
 				if(normalizationFactors[j] == 0)
 					normalizingMatrix[i][j] = 0.0;
+				else if(normalizingMatrix[i][j] == null)
+					normalizingMatrix[i][j] = 0.0;
 				else
 					normalizingMatrix[i][j] = normalizingMatrix[i][j]/normalizationFactors[j];
 			}
 		}
 		
 		return normalizingMatrix;
+	}
+	
+	
+	public void minMaxNormalization(Double[][] normalizingMatrix)
+	{
+		outputMax = normalizingMatrix[0][0];
+		outputMin = normalizingMatrix[0][0];
+		for(int i = 0; i < normalizingMatrix.length; i++)
+		{
+			for(int j = 0; j < normalizingMatrix[0].length; j++)
+			{
+				if(normalizingMatrix[i][j] > outputMax)
+					outputMax = normalizingMatrix[i][j];
+				else if(normalizingMatrix[i][j] < outputMin)
+					outputMin = normalizingMatrix[i][j];
+			}
+		}
+		
+		for(int i = 0; i < normalizingMatrix.length; i++)
+		{
+			for(int j = 0; j < normalizingMatrix[0].length; j++)
+			{
+				normalizingMatrix[i][j] = (normalizingMatrix[i][j] - outputMin)/(outputMax - outputMin);
+			}
+		}
+		
 	}
 	
 	
@@ -328,6 +366,7 @@ public class NeuralNet {
 	//This is how we get the answer of our neural net.  It is simply a set of matrix manipulation and storage
 	public void calculateForwardProp()
 	{
+		activationFactors = new ArrayList<Double[][]>();
 		Double[][] a = inputData;
 		activationFactors.add(0, a);
 		for(int i = 0; i < networkDescription.length - 1; i++)
@@ -361,6 +400,8 @@ public class NeuralNet {
 	//IT WORKS!!
 	public void calculateCostFunctionGradient()
 	{
+		errorFactors = new ArrayList<Double[][]>();
+		initializeValuesInMatrix(false, errorFactors);
 		for(int i = networkDescription.length - 1; i >= 0; i--)
 		{
 			Double[][] errorFactor;
