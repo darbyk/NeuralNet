@@ -1,3 +1,5 @@
+package com.darby.neuralnet;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferByte;

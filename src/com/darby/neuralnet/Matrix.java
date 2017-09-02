@@ -1,3 +1,5 @@
+package com.darby.neuralnet;
+
 import java.util.Arrays;
 
 public class Matrix {
