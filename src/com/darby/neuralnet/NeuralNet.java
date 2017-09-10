@@ -19,7 +19,7 @@ public class NeuralNet {
 	String loadFile = "test.txt";
 	String saveFile = "test.txt";
 	double thresholdError = 1.0e-4;
-	int maxNumberOfLoops = 200;
+	int maxNumberOfLoops = 5;
 
 	//Matrix descriptors
 	Double[][] inputData;
@@ -33,8 +33,8 @@ public class NeuralNet {
 	
 	//Normalization Helper
 	double[] normalizationFactors;
-	double outputMin;
-	double outputMax;
+	public double outputMin;
+	public double outputMax;
 	
 	//Results
 	Double[][] yHat;
@@ -275,6 +275,21 @@ public class NeuralNet {
 		this.saveFile = saveFile;
 	}
 	
+	public void setInputData(Double[][] newInputData)
+	{
+		this.inputData = newInputData;
+	}
+	
+	public void setOutputData(Double[][] newOutputData)
+	{
+		this.outputData = newOutputData;
+	}
+	
+	public Double[][] getYHat()
+	{
+		return this.yHat;
+	}
+	
 	//When we normalize our input data, we want to normalize it per column rather than overall since each
 	//column has the possibility of representing its own piece of distinct information and columns do not
 	//necessarily relate to each other in any way
@@ -336,6 +351,19 @@ public class NeuralNet {
 			}
 		}
 		
+	}
+	
+	public Double[][] unMinMaxNormalize(Double[][] normalizingMatrix, double min, double max)
+	{
+		for(int i = 0; i < normalizingMatrix.length; i++)
+		{
+			for(int j = 0; j < normalizingMatrix[0].length; j++)
+			{
+				normalizingMatrix[i][j] = (normalizingMatrix[i][j] * (outputMax - outputMin) + outputMin);
+			}
+		}
+		
+		return normalizingMatrix;
 	}
 	
 	
