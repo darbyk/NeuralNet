@@ -10,23 +10,25 @@ import com.darby.neuralnet.NeuralNet;
 
 public class ImportAndSanitize {
 
-	public static int minCounter = 00000;
-	public static int maxCounter = 60000;
+	public static int minCounter = 40000;
+	public static int maxCounter = 90000;
+	
+	public static int propertyFeatures = 59;
 	
 	public static void main(String args[])
 	{
-		Double importedValues[][] = loadInputFile();
-		Double importedTrainValues[][] = loadTrainFile();
+		Double importedValues[][] = loadInputFile("darbyMapping.csv");
+		Double importedTrainValues[][] = loadTrainFile("darbyMappingOutput.csv");
 	}
 	
 	public static void createTestOutput(NeuralNet NN)
 	{
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbySampleOutput.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\darbySampleOutput.csv");
 		
 		//Read from file
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
 		    
-			PrintWriter out = new PrintWriter( "C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbyRealOutput.csv" );
+			PrintWriter out = new PrintWriter( "C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\darbyRealOutput.csv" );
 			out.println("ParcelId,201610,201611,201612,201710,201711,201712");
 			
 			String line = br.readLine();
@@ -36,7 +38,7 @@ public class ImportAndSanitize {
 		    	if(counter%100 == 0)
 		    		System.out.println(counter);
 		    	counter++;
-		    	Double[] tempLine = new Double[58];
+		    	Double[] tempLine = new Double[propertyFeatures];
 		    	String[] splitLine = line.split(",");
 		    	
 		    	String outputString = splitLine[0];
@@ -57,8 +59,26 @@ public class ImportAndSanitize {
 		    		sanitizeInput(i, tempValueBeforeSanitation, tempLine);
 			    }
 		    	
-		    	Double[][] finalNNTest = new Double[1][58];
-		    	finalNNTest[0] = tempLine;
+		    	Double[][] finalNNTest = new Double[3][propertyFeatures];
+		    	
+//		    	finalNNTest = new Double[1][propertyFeatures];
+		    	
+		    	finalNNTest[0] = tempLine.clone();
+		    	finalNNTest[1] = tempLine.clone();
+		    	finalNNTest[2] = tempLine.clone();
+//		    	finalNNTest[3] = tempLine;
+//		    	finalNNTest[4] = tempLine;
+//		    	finalNNTest[5] = tempLine;
+		    	
+		    	finalNNTest[0][propertyFeatures - 1] = 10.;
+		    	finalNNTest[1][propertyFeatures - 1] = 11.;
+		    	finalNNTest[2][propertyFeatures - 1] = 12.;
+//		    	finalNNTest[3][propertyFeatures - 1] = 10.;
+//		    	finalNNTest[4][propertyFeatures - 1] = 11.;
+//		    	finalNNTest[5][propertyFeatures - 1] = 12.;
+		    	
+		    	
+		    	
 		    	finalNNTest = NN.normalizeMatrix(finalNNTest);
 		    	
 		    	NN.setInputData(finalNNTest);
@@ -66,13 +86,13 @@ public class ImportAndSanitize {
 		    	NN.calculateForwardProp();
 		    	
 		    	Double[][] resultToWrite = NN.unMinMaxNormalize(NN.getYHat(), NN.outputMin, NN.outputMax);
-		    	resultToWrite[0][0] = Math.round(resultToWrite[0][0] * 10000) / 10000.0;
-		    	outputString += Double.toString(resultToWrite[0][0]) + "," + 
-		    					Double.toString(resultToWrite[0][0]) + "," + 
-		    					Double.toString(resultToWrite[0][0]) + "," + 
-		    					Double.toString(resultToWrite[0][0]) + "," + 
-		    					Double.toString(resultToWrite[0][0]) + "," + 
-		    					Double.toString(resultToWrite[0][0]);
+//		    	resultToWrite[0][0] = Math.round(resultToWrite[0][0] * 10000) / 10000.0;
+		    	outputString += Double.toString(Math.round(resultToWrite[0][0] * 10000) / 10000.0) + "," + 
+		    					Double.toString(Math.round(resultToWrite[1][0] * 10000) / 10000.0) + "," + 
+		    					Double.toString(Math.round(resultToWrite[2][0] * 10000) / 10000.0) + "," + 
+		    					Double.toString(Math.round(resultToWrite[0][0] * 10000) / 10000.0) + "," + 
+		    					Double.toString(Math.round(resultToWrite[1][0] * 10000) / 10000.0) + "," + 
+		    					Double.toString(Math.round(resultToWrite[2][0] * 10000) / 10000.0);
 		    	
 		    	out.println(outputString);
 		        line = br.readLine();
@@ -92,10 +112,10 @@ public class ImportAndSanitize {
 		
 	}
 	
-	public static Double[][] loadInputFile()
+	public static Double[][] loadInputFile(String inputFileName)
 	{
 		ArrayList<Double[]> initialImportedValues = new ArrayList<Double[]>();
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbyMapping.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\" + inputFileName);
 		
 		//Read from file
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
@@ -107,7 +127,7 @@ public class ImportAndSanitize {
 		    	counter++;
 		    	if(counter >= minCounter)
 		    	{
-			    	Double[] tempLine = new Double[58];
+			    	Double[] tempLine = new Double[propertyFeatures];
 			    	String[] splitLine = line.split(",");
 			    	for(int i = 0; i < splitLine.length; i++)
 				    {
@@ -223,6 +243,7 @@ public class ImportAndSanitize {
 			case 17:  
 				// fips
 				tempLine[i] = 1.0;
+//				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 18:  
 				// fireplacecnt
@@ -283,6 +304,7 @@ public class ImportAndSanitize {
 			case 32:  
 				// propertycountylandusecode
 				tempLine[i] = 1.0;
+//				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 33:  
 				// propertylandusetypeid
@@ -291,27 +313,33 @@ public class ImportAndSanitize {
 			case 34:  
 				// propertyzoningdesc
 				tempLine[i] = 1.0;
+//				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 35:  
 				// rawcensustractandblock
 				tempLine[i] = 1.0;
+//				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 36:  
 				// regionidcity
 				tempLine[i] = 1.0;
+//				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 37:  
 				// regionidcounty
-				tempLine[i] = 1.0;
+//				tempLine[i] = 1.0;
+				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 38:  
 				// regionidneighborhood
 				tempLine[i] = 1.0;
+//				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 39:  
 				// regionidzip
 				// want to convert to an aggregate, but will 1 out for now
-				tempLine[i] = tempValueBeforeSanitation;
+				tempLine[i] = 1.0;
+//				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 40:  
 				// roomcnt
@@ -344,7 +372,8 @@ public class ImportAndSanitize {
 			case 47:  
 				// yearbuilt
 				// Convert to age
-				tempLine[i] = 2017 - tempValueBeforeSanitation;
+//				tempLine[i] = 2017 - tempValueBeforeSanitation;
+				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 48:  
 				// numberofstories
@@ -365,7 +394,8 @@ public class ImportAndSanitize {
 			case 52:  
 				// assessmentyear
 				// convert to age
-				tempLine[i] = 2017 - tempValueBeforeSanitation;
+//				tempLine[i] = 2017 - tempValueBeforeSanitation;
+				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 53:  
 				// landtaxvaluedollarcnt
@@ -381,19 +411,24 @@ public class ImportAndSanitize {
 				break;
 			case 56:  
 				// taxdelinquencyyear
-				tempLine[i] = 2017 - tempValueBeforeSanitation;
+//				tempLine[i] = 2017 - tempValueBeforeSanitation;
+				tempLine[i] = tempValueBeforeSanitation;
 				break;
 			case 57:  
 				// censustractandblock
 				tempLine[i] = 1.0;
 				break;
+			case 58:
+				// month
+				tempLine[i] = tempValueBeforeSanitation;
+				break;
 		}
 	}
 
-	public static Double[][] loadTrainFile()
+	public static Double[][] loadTrainFile(String trainFileName)
 	{
 		ArrayList<Double[]> initialImportedValues = new ArrayList<Double[]>();
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbyMappingOutput.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\" + trainFileName);
 		
 		//Read from file
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {

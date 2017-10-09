@@ -25,7 +25,8 @@ public class NeuralNet {
 	Double[][] inputData;
 	Double[][] outputData;
 	int[] networkDescription;
-	double complexityCostLambda = 0.0001;
+	double complexityCostLambda = 0.000050;
+//	double complexityCostLambda = 0.0001;
 	ArrayList<Double[][]> weights = new ArrayList<Double[][]>();
 	ArrayList<Double[][]> gradients = new ArrayList<Double[][]>();
 	ArrayList<Double[][]> activationFactors = new ArrayList<Double[][]>();

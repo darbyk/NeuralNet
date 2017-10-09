@@ -19,13 +19,62 @@ public class Mapping {
 	{
 //		HashSet<Double> resultsWithAnswers = readOutputFile();
 //		readInputFile(resultsWithAnswers);
-		
-		
+//		
+//		
 //		reorderOutput();
 		
 		
-		HashSet<Double> SampleSubmissionAnswers = readSampleSolutionFile();
-		readPropertiesForOutputFile(SampleSubmissionAnswers);
+//		HashSet<Double> SampleSubmissionAnswers = readSampleSolutionFile();
+//		readPropertiesForOutputFile(SampleSubmissionAnswers);
+		
+		findParcelId("13026021");
+		
+	}
+	
+	
+	
+	public static void findParcelId(String parcelId)
+	{
+		
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\properties_2016.csv");
+		
+		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
+		    
+//			PrintWriter out = new PrintWriter( "C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\darbyMapping.csv" );
+			
+			String line = br.readLine();
+			line = br.readLine();
+		    int counter = 0;
+		    boolean matchesFound = false;
+			
+		    
+		    while (!matchesFound && line != null ) {
+		    	
+		    	Double[] tempLine = new Double[57];
+		    	String[] splitLine = line.split(",");
+		    	
+//		    	System.out.println(splitLine[0]);
+		    	
+		    	if(parcelId.compareTo(splitLine[0]) == 0)
+		    	{
+		    		System.out.println(line);
+		    		matchesFound = true;
+		    	}
+		    		
+		    	line = br.readLine();
+		    	if(counter % 100000 == 0)
+		    		System.out.println("Counter at: " + counter);
+		    	counter++;
+		    }
+		    
+		    System.out.println(matchesFound);
+		    
+		    br.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 	}
 	
@@ -33,7 +82,7 @@ public class Mapping {
 	public static HashSet<Double> readOutputFile()
 	{
 		HashSet<Double> hs = new HashSet<Double>();
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\train_2016_v2.csv\\train_2016_v2.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\train_2016_v2.csv\\train_2016_v2.csv");
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
 		    
 			String line = br.readLine();
@@ -62,11 +111,11 @@ public class Mapping {
 	
 	public static void readInputFile(HashSet<Double> resultsToMatch)
 	{
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\properties_2016.csv\\properties_2016.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\properties_2016.csv");
 
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
 		    
-			PrintWriter out = new PrintWriter( "C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbyMapping.csv" );
+			PrintWriter out = new PrintWriter( "C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\darbyMapping.csv" );
 			
 			String line = br.readLine();
 			line = br.readLine();
@@ -108,12 +157,12 @@ public class Mapping {
 
 	public static void reorderOutput()
 	{
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbyMapping.csv");
-		File outputValuesPath = new File("C:\\Users\\Darby\\Downloads\\train_2016_v2.csv\\train_2016_v2.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\darbyMapping.csv");
+		File outputValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\train_2016_v2.csv\\train_2016_v2.csv");
 
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
 		    
-			PrintWriter out = new PrintWriter( "C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbyMappingOutput.csv" );
+			PrintWriter out = new PrintWriter( "C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\darbyMappingOutput.csv" );
 			
 			String line = br.readLine();
 			line = br.readLine();
@@ -176,7 +225,7 @@ public class Mapping {
 	public static HashSet<Double> readSampleSolutionFile()
 	{
 		HashSet<Double> hs = new HashSet<Double>();
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\sample_submission.csv\\sample_submission.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\sample_submission.csv\\sample_submission.csv");
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
 		    
 			String line = br.readLine();
@@ -204,11 +253,11 @@ public class Mapping {
 	
 	public static void readPropertiesForOutputFile(HashSet<Double> resultsToMatch)
 	{
-		File importedValuesPath = new File("C:\\Users\\Darby\\Downloads\\properties_2016.csv\\properties_2016.csv");
+		File importedValuesPath = new File("C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\properties_2016.csv");
 
 		try(BufferedReader br = new BufferedReader(new FileReader(importedValuesPath))) {
 		    
-			PrintWriter out = new PrintWriter( "C:\\Users\\Darby\\Downloads\\properties_2016.csv\\darbySampleOutput.csv" );
+			PrintWriter out = new PrintWriter( "C:\\Users\\darby.kidwell\\Downloads\\properties_2016.csv\\darbySampleOutput.csv" );
 			
 			String line = br.readLine();
 			line = br.readLine();
